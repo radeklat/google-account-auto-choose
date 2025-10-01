@@ -1,0 +1,13 @@
+{
+  "addons": {
+    "{3df6cb6d-7a64-478b-a424-6deb2eb09b3f}": {
+      "updates": [
+        {
+          "version": "1.0.0",
+          "update_link": "https://radeklat.github.io/google-account-auto-choose/releases/google-account-auto-chooser-1.0.0.xpi",
+          "update_hash": "sha256:07c32750783a951b4528561caef6b0788b5f4a0f617457dca1cb99f1b40eba8f"
+        }
+      ]
+    }
+  }
+}

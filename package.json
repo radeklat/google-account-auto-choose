@@ -1,0 +1,44 @@
+{
+  "name": "google-account-auto-chooser",
+  "version": "1.0.0",
+  "description": "Firefox addon that automatically selects Google accounts based on URL patterns",
+  "main": "manifest.json",
+  "scripts": {
+    "build": "npm run clean && npm run copy && npm run icons",
+    "clean": "rm -rf dist/",
+    "copy": "mkdir -p dist && cp -r src/* dist/ && sed 's|src/||g' manifest.json > dist/manifest.json",
+    "icons": "mkdir -p dist/icons && cp icons/* dist/icons/ 2>/dev/null || echo 'Icons not found, creating placeholder'",
+    "dev": "npm run build && echo 'Addon built in dist/ folder. Load from Firefox about:debugging'",
+    "watch": "nodemon --watch src --watch manifest.json --exec 'npm run build'",
+    "test": "echo 'No tests configured yet'",
+    "lint": "eslint src/",
+    "lint:web-ext": "web-ext lint --source-dir dist --self-hosted",
+    "package": "npm run build && cd dist && zip -r ../google-account-auto-chooser.zip .",
+    "release": "node scripts/release.js",
+    "sign": "web-ext sign --source-dir dist --artifacts-dir releases --self-hosted",
+    "sign:amo": "web-ext sign --source-dir dist --artifacts-dir releases --api-key $AMO_JWT_ISSUER --api-secret $AMO_JWT_SECRET --self-hosted"
+  },
+  "keywords": [
+    "firefox",
+    "addon",
+    "extension",
+    "google",
+    "account",
+    "automation"
+  ],
+  "author": "Radek Lát",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "nodemon": "^3.0.0",
+    "web-ext": "^7.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/radeklat/google-account-auto-choose.git"
+  },
+  "bugs": {
+    "url": "https://github.com/radeklat/google-account-auto-choose/issues"
+  },
+  "homepage": "https://github.com/radeklat/google-account-auto-choose#readme"
+}

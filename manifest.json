@@ -1,0 +1,61 @@
+{
+  "manifest_version": 2,
+  "name": "Google Account Auto-Chooser",
+  "version": "1.0.0",
+  "description": "Automatically selects the appropriate Google account based on the continue URL and auto-closes confirmation pages",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs",
+    "*://accounts.google.com/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["src/background.js"],
+    "persistent": false
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://accounts.google.com/v3/signin/accountchooser*",
+        "*://accounts.google.com/*"
+      ],
+      "js": ["src/account-chooser.js"],
+      "run_at": "document_end"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/auto-close.js"],
+      "run_at": "document_end",
+      "all_frames": false
+    }
+  ],
+  "browser_action": {
+    "default_popup": "src/popup.html",
+    "default_title": "Google Account Auto-Chooser",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "19": "icons/icon-19.png",
+      "32": "icons/icon-32.png",
+      "38": "icons/icon-38.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "19": "icons/icon-19.png",
+    "32": "icons/icon-32.png",
+    "38": "icons/icon-38.png",
+    "48": "icons/icon-48.png",
+    "64": "icons/icon-64.png",
+    "96": "icons/icon-96.png",
+    "128": "icons/icon-128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "update_url": "https://radeklat.github.io/google-account-auto-choose/updates.json",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  }
+}

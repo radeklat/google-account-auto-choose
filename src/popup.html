@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Google Account Auto-Chooser</title>
+  <style>
+    body {
+      width: 400px;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #1a73e8;
+    }
+    .header-content {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .header-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+    }
+    .header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .config-section {
+      margin-bottom: 20px;
+    }
+    .rule {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      background: #f8f9fa;
+      transition: border-color 0.2s;
+    }
+
+    .rule-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .rule-name {
+      font-weight: bold;
+      color: #1a73e8;
+      flex: 1;
+      margin-right: 15px;
+    }
+    .rule-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .enabled-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: #666;
+    }
+    .enabled-checkbox input[type="checkbox"] {
+      margin: 0;
+    }
+    .delete-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .form-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+    .form-row label {
+      min-width: 60px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #333;
+      margin: 0;
+    }
+    .form-row input {
+      flex: 1;
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    /* Override any browser validation styles */
+    .form-row input:invalid {
+      border-color: #ddd !important;
+      box-shadow: none !important;
+    }
+    .input-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+
+
+    .add-rule-btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      width: 100%;
+    }
+    .add-rule-btn:hover {
+      background: #218838;
+    }
+    .help-toggle {
+      background: #e3f2fd;
+      border: 1px solid #2196f3;
+      border-radius: 4px;
+      padding: 10px 15px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .help-toggle:hover {
+      background: #bbdefb;
+    }
+    .help-toggle h4 {
+      margin: 0;
+      color: #1976d2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .help-toggle .toggle-icon {
+      font-size: 18px;
+      transition: transform 0.2s;
+    }
+    .help-toggle.expanded .toggle-icon {
+      transform: rotate(180deg);
+    }
+    .help-content {
+      display: none;
+      padding-top: 15px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .help-toggle.expanded .help-content {
+      display: block;
+    }
+    .help-content ul {
+      margin: 5px 0;
+      padding-left: 20px;
+    }
+    .help-content li {
+      margin-bottom: 5px;
+    }
+    .example {
+      background: #f5f5f5;
+      border-left: 3px solid #1a73e8;
+      padding: 10px;
+      margin: 10px 0;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .addon-enabled {
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .addon-enabled h3 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+    .addon-enabled-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .addon-enabled-row label {
+      font-weight: 500;
+      color: #333;
+      margin: 0;
+    }
+    .addon-enabled-row input[type="checkbox"] {
+      margin: 0;
+    }
+    .reset-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .reset-btn:hover {
+      background: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <img src="../icons/icon-48.png" alt="Addon Icon" class="header-icon">
+      <h2>Google Account Auto-Chooser</h2>
+    </div>
+  </div>
+
+  <div class="addon-enabled">
+    <div class="addon-enabled-row">
+      <input type="checkbox" id="addon-enabled" checked>
+      <label for="addon-enabled">Addon enabled</label>
+    </div>
+    <div class="addon-enabled-row">
+      <input type="checkbox" id="auto-close-confirmation" checked>
+      <label for="auto-close-confirmation">Auto-close confirmation pages</label>
+    </div>
+    <div class="addon-enabled-row">
+      <label for="auto-close-delay">Auto-close within (seconds):</label>
+      <input type="number" id="auto-close-delay" min="1" max="300" value="10" style="width: 60px;">
+    </div>
+  </div>
+
+  <div class="help-toggle" id="help-toggle">
+    <h4>
+      How to Configure
+      <span class="toggle-icon">▼</span>
+    </h4>
+    <div class="help-content">
+      <p>This addon automatically selects Google accounts based on URL patterns. Configure rules below:</p>
+      <ul>
+        <li><strong>Enabled:</strong> Enable or disable this specific rule</li>
+        <li><strong>Name:</strong> A descriptive name for the rule</li>
+        <li><strong>Match:</strong> Regex pattern to match URL of the correct Google account choice page</li>
+        <li><strong>Email:</strong> The email address to automatically select</li>
+        <li><strong>Auto-close:</strong> Regex pattern to match URL of a possible confirmation page for auto-closing (optional)</li>
+        <li><strong>Auto-close within:</strong> Time window in seconds after account selection when auto-close should occur</li>
+      </ul>
+      
+      <div class="example">
+        <strong>Example:</strong><br>
+        URL: https://accounts.google.com/v3/signin/accountchooser?continue=https://accounts.google.com/o/saml2/continue<br>
+        Match: .*/saml2/.*<br>
+        Email: user@company.com<br>
+        Auto-close: .*done=1
+      </div>
+    </div>
+  </div>
+
+  <div class="config-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h3 style="margin: 0;">Account Selection Rules</h3>
+      <button id="reset-success-counts" class="reset-btn" title="Reset all rule success counts">Reset Counts</button>
+    </div>
+    <div id="rules-container">
+      <!-- Rules will be populated here -->
+    </div>
+    
+    <button class="add-rule-btn" id="add-rule-btn">+ Add New Rule</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Create release
+      run: npm run release
+      env:
+        AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+        AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+      
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: releases/*.xpi
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: .
+        keep_files: true
+
