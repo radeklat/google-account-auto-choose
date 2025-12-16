@@ -33,6 +33,6 @@ If you don't have custom icons yet, you can:
 ## Testing
 
 After adding icons, test them by:
-1. Building the addon: `npm run build`
+1. Building the addon: `make build`
 2. Loading it in Firefox via `about:debugging`
 3. Checking that icons appear in the toolbar and addon management page

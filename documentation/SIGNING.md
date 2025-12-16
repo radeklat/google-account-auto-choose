@@ -44,7 +44,7 @@ For GitHub Actions, add these as repository secrets:
 The release script automatically attempts to sign the addon:
 
 ```bash
-npm run release
+make release
 ```
 
 This will:
@@ -59,10 +59,10 @@ If automated signing fails, you can sign manually:
 
 ```bash
 # Build the addon first
-npm run build
+make build
 
 # Sign using web-ext
-npm run sign:amo
+make sign-amo
 ```
 
 ### Method 3: Using web-ext CLI

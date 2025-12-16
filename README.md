@@ -78,105 +78,6 @@ The addon will automatically check for updates every 24 hours. When a new versio
 
 **Note**: Temporary installations don't support automatic updates and will be removed when Firefox restarts.
 
-### For Developers
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/radeklat/google-account-auto-choose.git
-   cd google-account-auto-choose
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Build the addon:
-   ```bash
-   npm run build
-   ```
-
-4. Load in Firefox:
-   - Open Firefox and go to `about:debugging`
-   - Click "This Firefox" in the left sidebar
-   - Click "Load Temporary Add-on"
-   - Select the `manifest.json` file from the `dist/` folder
-
-## Development
-
-### Project Structure
-
-```
-google-account-auto-choose/
-├── src/
-│   ├── background.js      # Background script for addon logic
-│   ├── content.js         # Content script that runs on Google pages
-│   ├── popup.html         # Configuration popup interface
-│   └── popup.js           # Popup script logic
-├── icons/                 # Addon icons (create your own)
-│   ├── icon.png          # Source icon file (your custom design)
-│   ├── icon-19.png       # 19x19 toolbar icon
-│   ├── icon-38.png       # 38x38 toolbar icon @2x
-│   ├── icon-48.png       # 48x48 addon manager icon
-│   └── icon-96.png       # 96x96 addon manager icon @2x
-├── dist/                  # Build output (generated)
-├── manifest.json          # Addon manifest
-├── package.json           # Development dependencies
-└── README.md             # This file
-```
-
-### Available Scripts
-
-- `npm run build` - Build the addon to the `dist/` folder
-- `npm run dev` - Build and show instructions for loading
-- `npm run watch` - Watch for changes and rebuild automatically
-- `npm run clean` - Clean the build output
-- `npm run package` - Create a distributable ZIP file
-- `npm run release` - Create a release with signed XPI file and update manifest
-- `npm run sign` - Sign the addon using web-ext (requires API credentials)
-- `npm run sign:amo` - Sign the addon with AMO API credentials
-- `npm run lint` - Run ESLint on source code
-- `npm run lint:web-ext` - Validate addon using web-ext linter
-
-### Development Workflow
-
-1. **Make Changes**: Edit files in the `src/` directory
-2. **Build**: Run `npm run build` to update the `dist/` folder
-3. **Test**: Reload the addon in Firefox's `about:debugging` page
-4. **Repeat**: Make changes and rebuild as needed
-
-### Hot Reloading
-
-For development, use the watch mode:
-```bash
-npm run watch
-```
-
-This will automatically rebuild the addon whenever you save changes to source files.
-
-### Icon Management
-
-The addon requires icons in multiple sizes for different display contexts. If you want to update the icon design:
-
-1. **Replace the source icon**: Place your new design as `icons/icon.png`
-2. **Regenerate all sizes**: Run the following commands to create all required icon sizes:
-
-```bash
-for size in 16 19 32 38 48 64 96 128; do
-   convert icons/icon.png -resize ${size}x${size} -quality 100 icons/icon-${size}.png
-done
-
-# Copy all icons to dist folder
-cp icons/*.png dist/icons/
-```
-
-**Important**: Use the `-quality 100` flag to preserve colors and prevent the icons from becoming black and white.
-
-3. **Test the build**: Run `npm run build` to ensure everything works correctly
-4. **Reload in Firefox**: Test the new icons in the addon
-
-**Requirements**: ImageMagick must be installed on your system (`convert` command available).
-
 ## Configuration
 
 The addon starts with an empty configuration. You need to set up rules based on your needs:
@@ -254,43 +155,79 @@ Each rule can now include a custom auto-close pattern that will trigger tab clos
 - `.*calendar.*` - Matches Google Calendar URLs
 - `.*docs.*` - Matches Google Docs URLs
 
-## Testing
+# Development
 
-### Manual Testing
-
-1. **Build the Addon**:
+1. Clone the repository:
    ```bash
-   npm run build
+   git clone https://github.com/radeklat/google-account-auto-choose.git
+   cd google-account-auto-choose
    ```
 
-2. **Load in Firefox**:
-   - Go to `about:debugging`
-   - Click "This Firefox"
-   - Click "Load Temporary Add-on"
-   - Select `dist/manifest.json`
+2. Install dependencies:
+   ```bash
+   make install
+   ```
 
-3. **Configure Rules**:
-   - Click the addon icon in the toolbar
-   - Add a test rule (e.g., `.*/saml2/.*` → `your.email@company.com`)
+3. Build the addon:
+   ```bash
+   make build
+   ```
 
-4. **Test Account Selection**:
-   - Visit a Google account chooser page with a matching URL
-   - The addon should automatically select the configured account
+4. Load in Firefox as a [temporary addon](#option-2-temporary-installation-developmenttesting).
 
-### Testing URLs
+## Project Structure
 
-Create test URLs like:
 ```
-https://accounts.google.com/v3/signin/accountchooser?continue=https://accounts.google.com/o/saml2/continue
-https://accounts.google.com/v3/signin/accountchooser?continue=https://accounts.google.com/gmail/
-https://accounts.google.com/v3/signin/accountchooser?continue=https://accounts.google.com/drive/
+google-account-auto-choose/
+├── src/
+│   ├── background.js      # Background script for addon logic
+│   ├── content.js         # Content script that runs on Google pages
+│   ├── popup.html         # Configuration popup interface
+│   └── popup.js           # Popup script logic
+├── icons/                 # Addon icons
+├── dist/                  # Build output (generated)
+├── manifest.json          # Addon manifest
+├── package.json           # Development dependencies
+└── README.md             # This file
 ```
 
-### Debugging
+## Available Make targets
 
-- **Console Logs**: Check the browser console for addon messages
-- **Storage**: Use `browser.storage.local.get()` in the console to check configuration
-- **Content Script**: The content script logs its actions to the console
+- `make build` - Build the addon to the `dist/` folder
+- `make clean` - Clean the build output
+- `make release` - Create a release with signed XPI file and update manifest
+- `make sign` - Sign the addon using web-ext (requires API credentials)
+- `make sign-amo` - Sign the addon with AMO API credentials
+- `make lint` - Run ESLint on source code and validate addon using web-ext linter
+
+## Development Workflow
+
+1. **Make Changes**: Edit files in the `src/` directory
+2. **Test**: Reload the addon in Firefox's `about:debugging` page
+3. **Repeat**: Make changes and rebuild as needed
+
+## Icon Management
+
+The addon requires icons in multiple sizes for different display contexts. If you want to update the icon design:
+
+1. **Replace the source icon**: Place your new design as `icons/icon.png`
+2. **Regenerate all sizes**: Run the following commands to create all required icon sizes:
+
+```bash
+for size in 16 19 32 38 48 64 96 128; do
+   convert icons/icon.png -resize ${size}x${size} -quality 100 icons/icon-${size}.png
+done
+
+# Copy all icons to dist folder
+cp icons/*.png dist/icons/
+```
+
+**Important**: Use the `-quality 100` flag to preserve colors and prevent the icons from becoming black and white.
+
+3. **Test the build**: Run `make build` to ensure everything works correctly
+4. **Reload in Firefox**: Test the new icons in the addon
+
+**Requirements**: ImageMagick must be installed on your system (`convert` command available).
 
 ## Building for Distribution
 
@@ -309,14 +246,24 @@ To create a new release for self-hosting:
    export AMO_JWT_SECRET="your-jwt-secret-here"
    ```
 
-3. **Update version** in `package.json`:
+3. **Bump version (no git tag/commit)**:
    ```bash
-   # Edit package.json to increment version number
+   # Preferred (Makefile helpers):
+   make version-patch
+   # or:
+   make version-minor
+   make version-major
+
+   # Equivalent (direct npm):
+   # npm version patch --no-git-tag-version
+   # npm version minor --no-git-tag-version
+   # npm version major --no-git-tag-version
    ```
+   This automatically keeps `manifest.json` in sync with `package.json` (via an npm `version` hook).
 
 4. **Create release**:
    ```bash
-   npm run release
+   make release
    ```
 
 5. **Commit and push changes**:
@@ -339,24 +286,9 @@ To create a new release for self-hosting:
 
 **Important**: All Firefox addons must be signed by Mozilla before they can be installed. The release script automatically handles signing if you have the proper API credentials configured.
 
-### Create ZIP Package (Legacy)
+# Troubleshooting
 
-```bash
-npm run package
-```
-
-This creates `google-account-auto-chooser.zip` that can be distributed.
-
-### Firefox Add-ons Store
-
-To publish to the Firefox Add-ons store:
-1. Create an account at [addons.mozilla.org](https://addons.mozilla.org)
-2. Submit the ZIP file for review
-3. Wait for approval and publication
-
-## Troubleshooting
-
-### Installation Issues
+## Installation Issues
 
 **"This add-on could not be installed because it appears to be corrupt"**
 - Make sure you downloaded the signed XPI file from the releases page
@@ -397,14 +329,6 @@ To publish to the Firefox Add-ons store:
 3. Check that content scripts are running on Google pages
 4. Verify your configuration rules are saved correctly
 5. Test with a simple rule first (e.g., `.*` to match any URL)
-
-## Development
-
-This addon is built using:
-- Manifest V2 (Firefox compatibility)
-- Content scripts for page interaction
-- Storage API for configuration persistence
-- Popup interface for user configuration
 
 ## Contributing
 

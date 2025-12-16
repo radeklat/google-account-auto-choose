@@ -36,27 +36,51 @@ function createXPI(version) {
   
   // Build the addon
   console.log('Building addon...');
-  execSync('npm run build', { stdio: 'inherit' });
+  execSync('make build', { stdio: 'inherit' });
   
   // Check if API credentials are available for signing
-  if (process.env.AMO_JWT_ISSUER && process.env.AMO_JWT_SECRET) {
+  const amoJwtIssuer = (process.env.AMO_JWT_ISSUER || '').trim();
+  const amoJwtSecret = (process.env.AMO_JWT_SECRET || '').trim();
+
+  if (amoJwtIssuer && amoJwtSecret) {
     try {
       console.log('API credentials found, attempting to sign the addon...');
       
-      // Sign the addon using web-ext
-      const signCommand = `npx web-ext sign --source-dir dist --artifacts-dir releases --api-key "${process.env.AMO_JWT_ISSUER}" --api-secret "${process.env.AMO_JWT_SECRET}" --self-hosted`;
+      // Track artifacts so we can locate the signed XPI reliably after signing.
+      const artifactsBefore = new Set(fs.readdirSync('releases'));
+
+      // Sign the addon using web-ext (self-hosted distribution should use the "unlisted" channel).
+      // NOTE: Newer web-ext versions do not support --self-hosted for `sign`; use --channel instead.
+      const signCommand =
+        `npx --no-install web-ext sign --no-input --source-dir dist --artifacts-dir releases ` +
+        `--api-key "${amoJwtIssuer}" --api-secret "${amoJwtSecret}" --channel unlisted`;
       execSync(signCommand, { stdio: 'inherit' });
       
-      // Move the signed XPI to the expected location
-      const signedFile = path.join('releases', 'web-ext-artifacts', xpiName);
-      if (fs.existsSync(signedFile)) {
-        fs.copyFileSync(signedFile, xpiPath);
-        console.log(`Signed XPI created: ${xpiName}`);
+      // Copy the signed XPI to the expected location/name used by updates.json.
+      const artifactsAfter = fs.readdirSync('releases');
+      const newXpis = artifactsAfter
+        .filter((f) => f.endsWith('.xpi') && !artifactsBefore.has(f))
+        .map((f) => path.join('releases', f));
+
+      // Prefer a newly created XPI; otherwise fall back to "most recently modified .xpi".
+      const candidateXpis = (newXpis.length > 0)
+        ? newXpis
+        : artifactsAfter
+          .filter((f) => f.endsWith('.xpi'))
+          .map((f) => path.join('releases', f));
+
+      if (candidateXpis.length > 0) {
+        const latestSigned = candidateXpis
+          .map((p) => ({ p, mtimeMs: fs.statSync(p).mtimeMs }))
+          .sort((a, b) => b.mtimeMs - a.mtimeMs)[0].p;
+
+        fs.copyFileSync(latestSigned, xpiPath);
+        console.log(`Signed XPI copied to: ${xpiName}`);
         return xpiPath;
-      } else {
-        console.log('Signing failed, creating unsigned XPI');
-        // Fall through to create unsigned XPI
       }
+
+      console.log('Signing did not produce an XPI artifact, creating unsigned XPI');
+      // Fall through to create unsigned XPI
     } catch (error) {
       console.log('Signing failed:', error.message);
       console.log('Creating unsigned XPI');
