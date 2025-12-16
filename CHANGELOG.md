@@ -12,11 +12,18 @@ Types of changes are:
 
 ## [Unreleased]
 
+## [1.0.1] - 2025-12-16
+
+### Fixes
+
+- Show hits for each rule
+
 ## [1.0.0] - 2025-10-01
 
 ### Features
 
 - Initial release
 
-[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.0.0...HEAD
+[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.0.1...HEAD
+[1.0.1]: https://github.com/radeklat/delfino-core/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/radeklat/delfino-core/compare/initial...1.0.0

@@ -121,7 +121,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const ruleName = document.createElement('div');
     ruleName.className = 'rule-name';
-    ruleName.textContent = rule.name || `Rule ${index + 1} (${successCount} hit${successCount !== 1 ? 's' : ''})`;
+    if (rule.name) {
+      ruleName.textContent = `${rule.name} (${successCount} hit${successCount !== 1 ? 's' : ''})`;
+    } else {
+      ruleName.textContent = `Rule ${index + 1}`;
+    }
     
     const ruleControls = document.createElement('div');
     ruleControls.className = 'rule-controls';
