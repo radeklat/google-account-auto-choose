@@ -2,6 +2,8 @@
 document.addEventListener('DOMContentLoaded', function() {
   const rulesContainer = document.getElementById('rules-container');
   const addRuleBtn = document.getElementById('add-rule-btn');
+  const backupRulesBtn = document.getElementById('backup-rules-btn');
+  const restoreRulesBtn = document.getElementById('restore-rules-btn');
   const helpToggle = document.getElementById('help-toggle');
   const addonEnabledCheckbox = document.getElementById('addon-enabled');
   const autoCloseConfirmationCheckbox = document.getElementById('auto-close-confirmation');
@@ -21,6 +23,8 @@ document.addEventListener('DOMContentLoaded', function() {
   addRuleBtn.addEventListener('click', addNewRule);
   helpToggle.addEventListener('click', toggleHelp);
   resetSuccessCountsBtn.addEventListener('click', resetSuccessCounts);
+  if (backupRulesBtn) backupRulesBtn.addEventListener('click', backupConfigurationToJson);
+  if (restoreRulesBtn) restoreRulesBtn.addEventListener('click', openRestorePage);
   addonEnabledCheckbox.addEventListener('change', () => {
     updateAddonEnabled();
     autoSave();
@@ -62,6 +66,52 @@ document.addEventListener('DOMContentLoaded', function() {
     const delayInput = document.getElementById('auto-close-delay');
     if (delayInput) {
       delayInput.value = Math.round(autoCloseDelay / 1000); // Convert milliseconds to seconds
+    }
+  }
+
+  function safeParseSecondsToMs(value) {
+    const seconds = parseInt(String(value), 10);
+    if (!Number.isFinite(seconds) || seconds <= 0) return 10000;
+    return seconds * 1000;
+  }
+
+  function getConfigFromCurrentUI() {
+    // Preserve any in-flight edits before exporting.
+    const rules = collectRulesFromForm();
+    const enabled = addonEnabledCheckbox ? addonEnabledCheckbox.checked : true;
+    const autoClose = autoCloseConfirmationCheckbox ? autoCloseConfirmationCheckbox.checked : true;
+    const delayInput = document.getElementById('auto-close-delay');
+    const delayMs = delayInput ? safeParseSecondsToMs(delayInput.value) : 10000;
+
+    return {
+      enabled,
+      autoCloseConfirmation: autoClose,
+      autoCloseDelay: delayMs,
+      rules
+    };
+  }
+
+  function downloadJson(filename, obj) {
+    const json = JSON.stringify(obj, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    // Cleanup the object URL after the click has been handled.
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+
+  function backupConfigurationToJson() {
+    try {
+      const config = getConfigFromCurrentUI();
+      downloadJson('google-account-auto-chooser-backup.json', config);
+    } catch (error) {
+      console.error('Error creating backup:', error);
+      alert('Error creating backup. Please try again.');
     }
   }
 
@@ -431,5 +481,93 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  function openRestorePage() {
+    // File pickers inside extension popups are unreliable because the popup can be destroyed
+    // when the native dialog opens. Use a dedicated extension page for restore.
+    try {
+      Promise.resolve(browser.tabs.create({ url: browser.runtime.getURL('src/restore.html') }))
+        .then(() => {
+          // Close the popup UI to avoid leaving it hanging behind the restore tab.
+          window.close();
+        })
+        .catch((error) => {
+          console.error('Error opening restore page:', error);
+          alert('Error opening restore page. Please try again.');
+        });
+    } catch (error) {
+      console.error('Error opening restore page:', error);
+      alert('Error opening restore page. Please try again.');
+    }
+  }
+
+  function normalizeBoolean(value, defaultValue) {
+    if (typeof value === 'boolean') return value;
+    return defaultValue;
+  }
+
+  function normalizeString(value, defaultValue = '') {
+    if (value === undefined || value === null) return defaultValue;
+    return String(value);
+  }
+
+  function normalizeNonNegativeInt(value, defaultValue = 0) {
+    const num = parseInt(String(value), 10);
+    if (!Number.isFinite(num) || num < 0) return defaultValue;
+    return num;
+  }
+
+  function normalizeConfigFromJson(parsed) {
+    if (!parsed || typeof parsed !== 'object') {
+      throw new Error('Backup file must contain a JSON object.');
+    }
+    if (!Array.isArray(parsed.rules)) {
+      throw new Error('Backup file must contain a "rules" array.');
+    }
+
+    const normalizedRules = parsed.rules.map((rule, idx) => {
+      const r = (rule && typeof rule === 'object') ? rule : {};
+      const name = normalizeString(r.name, '').trim() || `Rule ${idx + 1}`;
+      const urlPattern = normalizeString(r.urlPattern, '').trim();
+      const email = normalizeString(r.email, '').trim();
+      const enabled = normalizeBoolean(r.enabled, true);
+      const autoClosePattern = normalizeString(r.autoClosePattern, '').trim();
+      const successCount = normalizeNonNegativeInt(r.successCount, 0);
+
+      return { name, urlPattern, email, enabled, autoClosePattern, successCount };
+    });
+
+    const enabled = normalizeBoolean(parsed.enabled, true);
+    const autoCloseConfirmationValue = normalizeBoolean(parsed.autoCloseConfirmation, true);
+    const delayMs = normalizeNonNegativeInt(parsed.autoCloseDelay, 10000) || 10000;
+
+    return {
+      enabled,
+      autoCloseConfirmation: autoCloseConfirmationValue,
+      autoCloseDelay: delayMs,
+      rules: normalizedRules
+    };
+  }
+
+  function validateRulesRegexes(rules) {
+    for (let i = 0; i < rules.length; i++) {
+      const rule = rules[i];
+      if (rule.urlPattern && rule.enabled) {
+        try {
+          new RegExp(rule.urlPattern);
+        } catch (error) {
+          throw new Error(`Invalid regex pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`);
+        }
+      }
+      if (rule.autoClosePattern && rule.autoClosePattern.trim()) {
+        try {
+          new RegExp(rule.autoClosePattern);
+        } catch (error) {
+          throw new Error(`Invalid auto-close pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`);
+        }
+      }
+    }
+  }
+
 });
 

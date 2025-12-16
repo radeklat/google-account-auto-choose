@@ -15,6 +15,7 @@ Types of changes are:
 ### Features
 
 - Suggest previously used emails in rules.
+- Backup and restore
 
 ## [1.0.3] - 2025-12-16
 

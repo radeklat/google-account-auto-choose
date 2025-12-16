@@ -126,6 +126,24 @@
     .add-rule-btn:hover {
       background: #218838;
     }
+    .secondary-btn {
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      width: 100%;
+    }
+    .secondary-btn:hover {
+      background: #5a6268;
+    }
+    .backup-restore-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
     .help-toggle {
       background: #e3f2fd;
       border: 1px solid #2196f3;
@@ -273,6 +291,11 @@
     </div>
     
     <button class="add-rule-btn" id="add-rule-btn">+ Add New Rule</button>
+    <div class="backup-restore-row">
+      <button class="secondary-btn" id="backup-rules-btn" type="button">Backup</button>
+      <button class="secondary-btn" id="restore-rules-btn" type="button">Restore</button>
+    </div>
+    <input id="restore-rules-file" type="file" accept="application/json,.json" style="display:none;">
   </div>
 
   <!-- Shared datalist used to provide an editable dropdown of known emails -->
