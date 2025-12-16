@@ -3,6 +3,11 @@
     "{3df6cb6d-7a64-478b-a424-6deb2eb09b3f}": {
       "updates": [
         {
+          "version": "1.1.0",
+          "update_link": "https://github.com/radeklat/google-account-auto-choose/releases/download/releases/1.1.0/google-account-auto-chooser-1.1.0.xpi",
+          "update_hash": "sha256:2a214d1f902cfc74b3b3ad22681a28655e156de15e766185d5a51fa1caa245cf"
+        },
+        {
           "version": "1.0.3",
           "update_link": "https://github.com/radeklat/google-account-auto-choose/releases/download/releases/1.0.3/google-account-auto-chooser-1.0.3.xpi",
           "update_hash": "sha256:d7f5c8d59b037a8e727884170bd9811df09126355dbca7bbaf0acf2a86d98445"

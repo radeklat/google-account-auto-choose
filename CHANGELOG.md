@@ -12,6 +12,8 @@ Types of changes are:
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-12-16
+
 ### Features
 
 - Suggest previously used emails in rules.
@@ -42,7 +44,8 @@ Types of changes are:
 
 - Initial release
 
-[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.0.3...HEAD
+[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/radeklat/delfino-core/compare/1.0.3...1.1.0
 [1.0.3]: https://github.com/radeklat/delfino-core/compare/1.0.2...1.0.3
 [1.0.2]: https://github.com/radeklat/delfino-core/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/radeklat/delfino-core/compare/1.0.0...1.0.1
