@@ -12,6 +12,10 @@ Types of changes are:
 
 ## [Unreleased]
 
+### Features
+
+- Suggest previously used emails in rules.
+
 ## [1.0.3] - 2025-12-16
 
 ### Fixes

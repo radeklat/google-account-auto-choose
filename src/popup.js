@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const addonEnabledCheckbox = document.getElementById('addon-enabled');
   const autoCloseConfirmationCheckbox = document.getElementById('auto-close-confirmation');
   const resetSuccessCountsBtn = document.getElementById('reset-success-counts');
+  const emailSuggestionsDatalistId = 'email-suggestions';
 
   let currentRules = [];
   let addonEnabled = true;
@@ -75,6 +76,8 @@ document.addEventListener('DOMContentLoaded', function() {
       addonEnabledCheckbox.checked = addonEnabled;
       autoCloseConfirmationCheckbox.checked = autoCloseConfirmation;
       updateAutoCloseDelayUI();
+      ensureEmailSuggestionsDatalist();
+      updateEmailSuggestionsFromRules(currentRules);
       renderRules();
     }).catch((error) => {
       console.error('Error loading configuration:', error);
@@ -85,12 +88,85 @@ document.addEventListener('DOMContentLoaded', function() {
       addonEnabledCheckbox.checked = addonEnabled;
       autoCloseConfirmationCheckbox.checked = autoCloseConfirmation;
       updateAutoCloseDelayUI();
+      ensureEmailSuggestionsDatalist();
+      updateEmailSuggestionsFromRules(currentRules);
       renderRules();
     });
   }
 
+  function ensureEmailSuggestionsDatalist() {
+    if (document.getElementById(emailSuggestionsDatalistId)) return;
+    const datalist = document.createElement('datalist');
+    datalist.id = emailSuggestionsDatalistId;
+    document.body.appendChild(datalist);
+  }
+
+  function getEmailCountsFromRules(rules) {
+    const counts = new Map();
+    (rules || []).forEach((r) => {
+      const email = (r && r.email ? String(r.email).trim() : '');
+      if (!email) return;
+      counts.set(email, (counts.get(email) || 0) + 1);
+    });
+    return counts;
+  }
+
+  function updateEmailSuggestionsFromRules(rules) {
+    ensureEmailSuggestionsDatalist();
+    const datalist = document.getElementById(emailSuggestionsDatalistId);
+    if (!datalist) return;
+
+    const counts = getEmailCountsFromRules(rules);
+    const emails = Array.from(counts.entries())
+      .sort((a, b) => {
+        // Most common first; tiebreak by lexicographic order for stability
+        const byCount = b[1] - a[1];
+        if (byCount !== 0) return byCount;
+        return a[0].localeCompare(b[0]);
+      })
+      .map(([email]) => email);
+
+    datalist.innerHTML = '';
+    emails.forEach((email) => {
+      const option = document.createElement('option');
+      option.value = email;
+      datalist.appendChild(option);
+    });
+  }
+
+  function collectRulesFromForm() {
+    const updatedRules = [];
+    const ruleElements = rulesContainer.querySelectorAll('.rule');
+
+    ruleElements.forEach((ruleElement, index) => {
+      const enabled = ruleElement.querySelector(`#enabled-${index}`).checked;
+      const name = ruleElement.querySelector(`#name-${index}`).value.trim();
+      const urlPattern = ruleElement.querySelector(`#pattern-${index}`).value.trim();
+      const email = ruleElement.querySelector(`#email-${index}`).value.trim();
+      const autoClosePattern = ruleElement.querySelector(`#auto-close-${index}`).value.trim();
+
+      // Preserve existing rule data like successCount
+      const existingRule = currentRules[index] || {};
+
+      updatedRules.push({
+        name: name || `Rule ${index + 1}`,
+        urlPattern: urlPattern || '',
+        email: email || '',
+        enabled: enabled,
+        autoClosePattern: autoClosePattern || '',
+        successCount: existingRule.successCount || 0
+      });
+    });
+
+    return updatedRules;
+  }
+
   function renderRules() {
     rulesContainer.innerHTML = '';
+
+    // Keep the email suggestions list in sync with whatever we currently have stored.
+    ensureEmailSuggestionsDatalist();
+    updateEmailSuggestionsFromRules(currentRules);
     
     if (currentRules.length === 0) {
       const emptyMessage = document.createElement('p');
@@ -159,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ruleHeader.appendChild(ruleControls);
     
     // Create form rows
-    const createFormRow = (labelText, inputId, inputType, inputValue, placeholder) => {
+    const createFormRow = (labelText, inputId, inputType, inputValue, placeholder, attributes = {}) => {
       const formRow = document.createElement('div');
       formRow.className = 'form-row';
       
@@ -175,6 +251,11 @@ document.addEventListener('DOMContentLoaded', function() {
       input.id = inputId;
       input.value = inputValue || '';
       input.placeholder = placeholder;
+
+      Object.entries(attributes || {}).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+        input.setAttribute(key, String(value));
+      });
       
       inputContainer.appendChild(input);
       formRow.appendChild(label);
@@ -185,7 +266,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const nameRow = createFormRow('Name:', `name-${index}`, 'text', rule.name, 'e.g., Work SAML, Personal Gmail');
     const patternRow = createFormRow('Match:', `pattern-${index}`, 'text', rule.urlPattern, 'e.g., .*/saml2/.*');
-    const emailRow = createFormRow('Email:', `email-${index}`, 'email', rule.email, 'e.g., user@company.com');
+    const emailRow = createFormRow('Email:', `email-${index}`, 'email', rule.email, 'e.g., user@company.com', {
+      list: emailSuggestionsDatalistId
+    });
     const autoCloseRow = createFormRow('Auto-close:', `auto-close-${index}`, 'text', rule.autoClosePattern, 'e.g., .*done=1');
     
     // Append all elements to ruleDiv
@@ -210,6 +293,8 @@ document.addEventListener('DOMContentLoaded', function() {
       autoSave();
     });
     emailInput.addEventListener('input', () => {
+      // Update the shared email dropdown suggestions from current form state
+      updateEmailSuggestionsFromRules(collectRulesFromForm());
       autoSave();
     });
     autoCloseInput.addEventListener('input', () => {
@@ -223,6 +308,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function addNewRule() {
+    // Preserve any in-flight edits before re-rendering.
+    currentRules = collectRulesFromForm();
+    updateEmailSuggestionsFromRules(currentRules);
+
     const newRule = {
       name: '',
       urlPattern: '',
@@ -283,29 +372,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function saveConfiguration(silent = false) {
-    // Collect all rule data from the form
-    const updatedRules = [];
-    const ruleElements = rulesContainer.querySelectorAll('.rule');
-    
-    ruleElements.forEach((ruleElement, index) => {
-      const enabled = ruleElement.querySelector(`#enabled-${index}`).checked;
-      const name = ruleElement.querySelector(`#name-${index}`).value.trim();
-      const urlPattern = ruleElement.querySelector(`#pattern-${index}`).value.trim();
-      const email = ruleElement.querySelector(`#email-${index}`).value.trim();
-      const autoClosePattern = ruleElement.querySelector(`#auto-close-${index}`).value.trim();
-      
-      // Preserve existing rule data like successCount
-      const existingRule = currentRules[index] || {};
-      
-      updatedRules.push({ 
-        name: name || `Rule ${index + 1}`, 
-        urlPattern: urlPattern || '', 
-        email: email || '', 
-        enabled: enabled,
-        autoClosePattern: autoClosePattern || '',
-        successCount: existingRule.successCount || 0
-      });
-    });
+    const updatedRules = collectRulesFromForm();
 
     // Check if we have at least one rule
     if (updatedRules.length === 0) {
@@ -314,6 +381,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       return;
     }
+
+    // Keep the suggestions list in sync with what we're about to persist.
+    updateEmailSuggestionsFromRules(updatedRules);
 
     // Test regex patterns for rules that have patterns
     for (let i = 0; i < updatedRules.length; i++) {
@@ -350,6 +420,7 @@ document.addEventListener('DOMContentLoaded', function() {
       autoCloseDelay: autoCloseDelay
     }).then(() => {
       currentRules = updatedRules;
+      updateEmailSuggestionsFromRules(currentRules);
       if (!silent) {
         console.log('Configuration saved successfully');
       }
