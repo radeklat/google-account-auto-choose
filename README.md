@@ -276,6 +276,7 @@ To create a new release for self-hosting:
 6. **Create GitHub release**:
    - Go to [GitHub Releases](https://github.com/radeklat/google-account-auto-choose/releases)
    - Click "Create a new release"
+   - Set the tag name to `releases/X.X.X` (for example `releases/1.0.1`)
    - Upload the generated signed XPI file from `releases/` folder
    - Publish the release
 

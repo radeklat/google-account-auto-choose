@@ -53,6 +53,9 @@ This will:
 3. Attempt to sign it using web-ext
 4. Update the updates.json manifest
 
+Note: The release process expects the GitHub Release tag name to be `releases/<version>` so that the `update_link`
+entries in `updates.json` point to the correct GitHub Releases download URL.
+
 ### Method 2: Manual Signing
 
 If automated signing fails, you can sign manually:

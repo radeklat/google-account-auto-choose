@@ -12,6 +12,19 @@ Types of changes are:
 
 ## [Unreleased]
 
+## [1.0.3] - 2025-12-16
+
+### Fixes
+
+- Missing ID in manifest
+
+## [1.0.2] - 2025-12-16
+
+### Fixes
+
+- Paths to update file in manifest
+- Paths to artifacts in updates file
+
 ## [1.0.1] - 2025-12-16
 
 ### Fixes
@@ -24,6 +37,8 @@ Types of changes are:
 
 - Initial release
 
-[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.0.1...HEAD
+[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.0.3...HEAD
+[1.0.3]: https://github.com/radeklat/delfino-core/compare/1.0.2...1.0.3
+[1.0.2]: https://github.com/radeklat/delfino-core/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/radeklat/delfino-core/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/radeklat/delfino-core/compare/initial...1.0.0

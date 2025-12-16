@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Google Account Auto-Chooser",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Automatically selects the appropriate Google account based on the continue URL and auto-closes confirmation pages",
   "permissions": [
     "activeTab",
@@ -60,6 +60,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
+      "id": "{63a189a5-478e-43a9-9b33-c14f04d71a94}",
       "update_url": "https://radeklat.github.io/google-account-auto-choose/updates.json",
       "data_collection_permissions": {
         "required": [

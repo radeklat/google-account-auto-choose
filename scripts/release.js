@@ -8,7 +8,8 @@ const { execSync } = require('child_process');
 const ADDON_ID = '{3df6cb6d-7a64-478b-a424-6deb2eb09b3f}';
 const GITHUB_USER = 'radeklat';
 const REPO_NAME = 'google-account-auto-choose';
-const BASE_URL = `https://${GITHUB_USER}.github.io/${REPO_NAME}`;
+const GITHUB_RELEASES_BASE_URL = `https://github.com/${GITHUB_USER}/${REPO_NAME}/releases/download`;
+const GITHUB_RELEASES_TAG_PREFIX = 'releases';
 
 function getVersion() {
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
@@ -117,7 +118,10 @@ function updateUpdatesManifest(version, xpiPath) {
   
   // Calculate hash for the XPI file
   const hash = calculateSHA256(xpiPath);
-  const updateUrl = `${BASE_URL}/releases/${path.basename(xpiPath)}`;
+  // IMPORTANT: This relies on the GitHub Release tag name being `releases/<version>`.
+  // For example: https://github.com/<user>/<repo>/releases/download/releases/1.0.1/<asset>.xpi
+  const releaseTag = `${GITHUB_RELEASES_TAG_PREFIX}/${version}`;
+  const updateUrl = `${GITHUB_RELEASES_BASE_URL}/${releaseTag}/${path.basename(xpiPath)}`;
   
   // Add new update entry
   const newUpdate = {
@@ -163,8 +167,9 @@ function main() {
   console.log(`SHA256: ${updateInfo.update_hash}`);
   console.log('\nNext steps:');
   console.log('1. Commit and push the changes');
-  console.log('2. Upload the XPI file to GitHub releases');
-  console.log('3. Enable GitHub Pages to serve the updates.json file');
+  console.log(`2. Create a GitHub Release with the tag name "${GITHUB_RELEASES_TAG_PREFIX}/${version}"`);
+  console.log('3. Upload the generated XPI file as a release asset');
+  console.log('4. Enable GitHub Pages to serve the updates.json file');
 }
 
 if (require.main === module) {
