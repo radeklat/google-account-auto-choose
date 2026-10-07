@@ -5,7 +5,8 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 // Configuration
-const ADDON_ID = '{3df6cb6d-7a64-478b-a424-6deb2eb09b3f}';
+// Must match the installed addon's ID, otherwise Firefox finds no updates in updates.json.
+const ADDON_ID = JSON.parse(fs.readFileSync('manifest.json', 'utf8')).browser_specific_settings.gecko.id;
 const GITHUB_USER = 'radeklat';
 const REPO_NAME = 'google-account-auto-choose';
 const GITHUB_RELEASES_BASE_URL = `https://github.com/${GITHUB_USER}/${REPO_NAME}/releases/download`;
