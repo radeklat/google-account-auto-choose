@@ -309,10 +309,9 @@ To create a new release for self-hosting:
    - Upload the generated signed XPI file from `releases/` folder
    - Publish the release
 
-7. **Enable GitHub Pages** (if not already enabled):
-   - Go to repository Settings → Pages
-   - Select "Deploy from a branch" → "main" branch
-   - This will serve the `updates.json` file for automatic updates
+7. **Merge to `main`**: Firefox reads `updates.json` from
+   `https://raw.githubusercontent.com/radeklat/google-account-auto-choose/main/updates.json`.
+   GitHub Pages also serves it for installs older than 1.2.1, which use the `github.io` URL. Keep Pages enabled.
 
 **Important**: All Firefox addons must be signed by Mozilla before they can be installed. The release script automatically handles signing if you have the proper API credentials configured.
 
