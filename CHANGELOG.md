@@ -12,9 +12,16 @@ Types of changes are:
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-07
+
 ### Features
 
 - Optional global auto-confirm of passkey ("Continue") and OAuth consent ("Allow") pages, e.g. for `gcloud auth login`.
+- Sync settings and rules between browsers via Firefox Sync. Existing settings are migrated automatically. Rules are limited to 8 KB in total; the popup warns when close to the limit.
+
+### Fixes
+
+- Automatic updates did not work because `updates.json` used a wrong addon ID.
 
 ## [1.1.0] - 2025-12-16
 
@@ -48,7 +55,8 @@ Types of changes are:
 
 - Initial release
 
-[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.1.0...HEAD
+[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.2.0...HEAD
+[1.2.0]: https://github.com/radeklat/delfino-core/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/radeklat/delfino-core/compare/1.0.3...1.1.0
 [1.0.3]: https://github.com/radeklat/delfino-core/compare/1.0.2...1.0.3
 [1.0.2]: https://github.com/radeklat/delfino-core/compare/1.0.1...1.0.2

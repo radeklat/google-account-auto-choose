@@ -38,33 +38,36 @@ const DEFAULT_CONFIG = {
 let accountSelectionTime = null;
 
 // Initialize addon when installed or updated
+// No defaults are written on install/update: readers treat missing keys as defaults,
+// and writing them could overwrite settings arriving from Firefox Sync.
 browser.runtime.onInstalled.addListener((details) => {
-  if (details.reason === 'install') {
-    // First time installation - set default config
-    browser.storage.local.set(DEFAULT_CONFIG).then(() => {
-      console.log('Google Account Auto-Chooser: Default configuration initialized');
-    }).catch((error) => {
-      console.error('Error initializing default configuration:', error);
-    });
-  } else if (details.reason === 'update') {
-    // Update - check if config exists, if not set defaults
-    browser.storage.local.get(['rules']).then((result) => {
-      if (!result.rules || result.rules.length === 0) {
-        return browser.storage.local.set(DEFAULT_CONFIG);
-      }
-    }).then(() => {
-      console.log('Google Account Auto-Chooser: Configuration updated');
-    }).catch((error) => {
-      console.error('Error updating configuration:', error);
+  if (details.reason === 'update') {
+    migrateLocalToSync().catch((error) => {
+      console.error('Error migrating configuration to sync storage:', error);
     });
   }
 });
+
+// Settings were in storage.local up to 1.1.0. Copy them once; keep local copy as a fallback.
+async function migrateLocalToSync() {
+  const keys = Object.keys(DEFAULT_CONFIG);
+  const synced = await browser.storage.sync.get(keys);
+  if (Object.keys(synced).length > 0) {
+    return;
+  }
+  const local = await browser.storage.local.get(keys);
+  if (Object.keys(local).length === 0) {
+    return;
+  }
+  await browser.storage.sync.set(local);
+  console.log('Google Account Auto-Chooser: Configuration migrated to sync storage');
+}
 
 // Handle messages from content scripts or popup
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'getConfig') {
     // Return current configuration
-    browser.storage.local.get(['enabled', 'autoCloseConfirmation', 'autoCloseDelay', 'rules']).then((result) => {
+    browser.storage.sync.get(['enabled', 'autoCloseConfirmation', 'autoCloseDelay', 'rules']).then((result) => {
       sendResponse({ success: true, config: result });
     }).catch((error) => {
       sendResponse({ success: false, error: error.message });
@@ -74,7 +77,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
   if (message.action === 'setConfig') {
     // Update configuration
-    browser.storage.local.set({ 
+    browser.storage.sync.set({ 
       enabled: message.enabled !== undefined ? message.enabled : true,
       autoCloseConfirmation: message.autoCloseConfirmation !== undefined ? message.autoCloseConfirmation : true,
       autoCloseDelay: message.autoCloseDelay !== undefined ? message.autoCloseDelay : 10000,
@@ -90,7 +93,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
   if (message.action === 'resetConfig') {
     // Reset to default configuration
-    browser.storage.local.set(DEFAULT_CONFIG).then(() => {
+    browser.storage.sync.set(DEFAULT_CONFIG).then(() => {
       sendResponse({ success: true });
     }).catch((error) => {
       sendResponse({ success: false, error: error.message });
@@ -109,7 +112,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'ruleSucceeded') {
     // Increment success count for the specified rule
     if (message.ruleName) {
-      browser.storage.local.get(['rules']).then((result) => {
+      browser.storage.sync.get(['rules']).then((result) => {
         const rules = result.rules || [];
         const ruleIndex = rules.findIndex(rule => rule.name === message.ruleName);
         
@@ -123,7 +126,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
           rules[ruleIndex].successCount++;
           
           // Save the updated rules
-          return browser.storage.local.set({ rules: rules });
+          return browser.storage.sync.set({ rules: rules });
         }
       }).then(() => {
         console.log(`Google Account Auto-Chooser: Success count incremented for rule "${message.ruleName}"`);
@@ -140,7 +143,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
   if (message.action === 'closeTab') {
     // Close the current tab if auto-close is enabled
-    browser.storage.local.get(['autoCloseConfirmation', 'autoCloseDelay', 'rules']).then((result) => {
+    browser.storage.sync.get(['autoCloseConfirmation', 'autoCloseDelay', 'rules']).then((result) => {
       if (result.autoCloseConfirmation !== false) {
         const currentUrl = message.url;
         let shouldClose = false;

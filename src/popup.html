@@ -139,6 +139,15 @@
     .secondary-btn:hover {
       background: #5a6268;
     }
+    .sync-size-warning {
+      display: none;
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 4px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
     .backup-restore-row {
       display: flex;
       gap: 10px;
@@ -294,6 +303,7 @@
       <!-- Rules will be populated here -->
     </div>
     
+    <div id="sync-size-warning" class="sync-size-warning"></div>
     <button class="add-rule-btn" id="add-rule-btn">+ Add New Rule</button>
     <div class="backup-restore-row">
       <button class="secondary-btn" id="backup-rules-btn" type="button">Backup</button>

@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const normalized = normalizeConfigFromJson(parsed);
       validateRulesRegexes(normalized.rules);
 
-      const existing = await browser.storage.local.get(['rules']);
+      const existing = await browser.storage.sync.get(['rules']);
       const existingRules = existing.rules || [];
       if (existingRules.length > 0) {
         const ok = confirm('Restore will overwrite all your addon data (settings and rules). This cannot be undone. Continue?');
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       setStatus('Restoring…');
-      await browser.storage.local.set({
+      await browser.storage.sync.set({
         enabled: normalized.enabled,
         autoCloseConfirmation: normalized.autoCloseConfirmation,
         autoCloseDelay: normalized.autoCloseDelay,

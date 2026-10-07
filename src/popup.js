@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const autoConfirmCheckbox = document.getElementById('auto-confirm');
   const resetSuccessCountsBtn = document.getElementById('reset-success-counts');
   const emailSuggestionsDatalistId = 'email-suggestions';
+  const syncSizeWarning = document.getElementById('sync-size-warning');
+  // Firefox storage.sync per-item quota (QUOTA_BYTES_PER_ITEM). All rules live in one item.
+  const SYNC_QUOTA_BYTES_PER_ITEM = 8192;
+  const SYNC_SIZE_WARNING_RATIO = 0.8;
 
   let currentRules = [];
   let addonEnabled = true;
@@ -123,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function loadConfiguration() {
-    browser.storage.local.get(['enabled', 'rules', 'autoCloseConfirmation', 'autoCloseDelay', 'autoConfirm']).then((result) => {
+    browser.storage.sync.get(['enabled', 'rules', 'autoCloseConfirmation', 'autoCloseDelay', 'autoConfirm']).then((result) => {
       addonEnabled = result.enabled !== undefined ? result.enabled : true;
       currentRules = result.rules || [];
       autoCloseConfirmation = result.autoCloseConfirmation !== undefined ? result.autoCloseConfirmation : true;
@@ -138,6 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
       ensureEmailSuggestionsDatalist();
       updateEmailSuggestionsFromRules(currentRules);
       renderRules();
+      updateSyncSizeWarning(currentRules);
     }).catch((error) => {
       console.error('Error loading configuration:', error);
       addonEnabled = true;
@@ -407,11 +412,13 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       // Save the updated rules
-      browser.storage.local.set({ rules: currentRules }).then(() => {
+      browser.storage.sync.set({ rules: currentRules }).then(() => {
         console.log('Success counts reset successfully');
         renderRules(); // Re-render to show updated counts
+        updateSyncSizeWarning(currentRules);
       }).catch((error) => {
         console.error('Error resetting success counts:', error);
+        updateSyncSizeWarning(currentRules, error);
         alert('Error resetting success counts. Please try again.');
       });
     }
@@ -428,6 +435,27 @@ document.addEventListener('DOMContentLoaded', function() {
     autoSaveTimeout = setTimeout(() => {
       saveConfiguration(true); // true = silent save (no user notification)
     }, 300);
+  }
+
+  // Approximates how Firefox measures an item: key length + JSON value length, in UTF-8 bytes.
+  function getRulesSyncBytes(rules) {
+    return new TextEncoder().encode(`rules${JSON.stringify(rules)}`).length;
+  }
+
+  function updateSyncSizeWarning(rules, saveError = null) {
+    if (!syncSizeWarning) return;
+    const bytes = getRulesSyncBytes(rules);
+    const percent = Math.round((bytes / SYNC_QUOTA_BYTES_PER_ITEM) * 100);
+    let message = '';
+    if (saveError && bytes <= SYNC_QUOTA_BYTES_PER_ITEM) {
+      message = `Settings NOT saved: ${saveError.message}`;
+    } else if (bytes > SYNC_QUOTA_BYTES_PER_ITEM) {
+      message = `Rules NOT saved: they use ${percent}% of the ${SYNC_QUOTA_BYTES_PER_ITEM / 1024} KB Firefox Sync limit. Remove or shorten rules.`;
+    } else if (bytes >= SYNC_QUOTA_BYTES_PER_ITEM * SYNC_SIZE_WARNING_RATIO) {
+      message = `Rules use ${percent}% of the ${SYNC_QUOTA_BYTES_PER_ITEM / 1024} KB Firefox Sync limit. Make a backup.`;
+    }
+    syncSizeWarning.textContent = message;
+    syncSizeWarning.style.display = message ? 'block' : 'none';
   }
 
   function saveConfiguration(silent = false) {
@@ -472,7 +500,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Save to storage
-    browser.storage.local.set({ 
+    browser.storage.sync.set({ 
       enabled: addonEnabled,
       rules: updatedRules,
       autoCloseConfirmation: autoCloseConfirmation,
@@ -481,11 +509,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }).then(() => {
       currentRules = updatedRules;
       updateEmailSuggestionsFromRules(currentRules);
+      updateSyncSizeWarning(currentRules);
       if (!silent) {
         console.log('Configuration saved successfully');
       }
     }).catch((error) => {
       console.error('Error saving configuration:', error);
+      updateSyncSizeWarning(updatedRules, error);
       if (!silent) {
         alert('Error saving configuration. Please try again.');
       }
