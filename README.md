@@ -8,6 +8,7 @@ A Firefox addon that automatically selects Google accounts on the account choose
 - **URL Pattern Matching**: Uses regex patterns to match the `continue` parameter in URLs
 - **Configurable Rules**: Set up multiple rules for different scenarios
 - **Easy Configuration**: Simple popup interface to manage your rules
+- **Firefox Sync**: Settings and rules sync between browsers signed in to the same Firefox account
 
 ## Quick Start
 
@@ -157,6 +158,23 @@ any app that asks for consent for such account.
 - **Match**: `32555940559\.apps\.googleusercontent\.com` (gcloud OAuth client ID, present on all pages of the flow)
 - **Email**: `user@company.com`
 - **Auto-close**: `docs\.cloud\.google\.com/sdk/auth_success`
+
+### Syncing Settings Between Browsers
+
+Settings and rules are stored in `browser.storage.sync`. Firefox Sync copies them to all browsers signed in to the same
+Firefox account. Requirements:
+
+- Signed in to Firefox Sync, with **Add-ons** selected in sync settings.
+- Changes arrive on the next sync (about every 10 minutes, or immediately with "Sync Now").
+
+Without Firefox Sync, settings stay in the local browser. On update from an older version, existing settings are copied
+to sync storage automatically.
+
+**Size limit:** Firefox limits one sync item to **8 KB**. All rules are stored in one item, so the total size of all
+rules (names, patterns, emails) must stay below 8 KB. That is approximately 40–80 rules, depending on pattern length.
+The popup shows a warning at 80% of the limit. When the limit is exceeded, changes are not saved. Use **Backup** to keep a
+copy of large configurations. See [documentation/SYNC_SIZE_LIMIT.md](documentation/SYNC_SIZE_LIMIT.md) for a possible
+future fix.
 
 ### Regex Pattern Examples
 

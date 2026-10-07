@@ -82,7 +82,7 @@
 
   // Load configuration from storage
   function loadConfiguration() {
-    return browser.storage.local.get(['enabled', 'rules', 'autoConfirm']).then((result) => {
+    return browser.storage.sync.get(['enabled', 'rules', 'autoConfirm']).then((result) => {
       config.enabled = result.enabled !== undefined ? result.enabled : true;
       config.autoConfirm = result.autoConfirm === true;
       config.rules = result.rules || [];

@@ -15,6 +15,7 @@ Types of changes are:
 ### Features
 
 - Optional global auto-confirm of passkey ("Continue") and OAuth consent ("Allow") pages, e.g. for `gcloud auth login`.
+- Sync settings and rules between browsers via Firefox Sync. Existing settings are migrated automatically. Rules are limited to 8 KB in total; the popup warns when close to the limit.
 
 ## [1.1.0] - 2025-12-16
 
