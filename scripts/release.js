@@ -170,7 +170,7 @@ function main() {
   console.log('1. Commit and push the changes');
   console.log(`2. Create a GitHub Release with the tag name "${GITHUB_RELEASES_TAG_PREFIX}/${version}"`);
   console.log('3. Upload the generated XPI file as a release asset');
-  console.log('4. Enable GitHub Pages to serve the updates.json file');
+  console.log('4. Merge to main; updates.json is served from raw.githubusercontent.com');
 }
 
 if (require.main === module) {
