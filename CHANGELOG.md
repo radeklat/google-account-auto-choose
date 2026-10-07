@@ -12,6 +12,13 @@ Types of changes are:
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-10-07
+
+### Fixes
+
+- "Restore" button opened a missing page in the installed (signed) addon.
+- Settings were not saved when there were no rules (checkboxes, deleting the last rule).
+
 ## [1.2.1] - 2026-10-07
 
 ### Fixes
@@ -61,7 +68,8 @@ Types of changes are:
 
 - Initial release
 
-[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.2.1...HEAD
+[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.2.2...HEAD
+[1.2.2]: https://github.com/radeklat/delfino-core/compare/1.2.1...1.2.2
 [1.2.1]: https://github.com/radeklat/delfino-core/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/radeklat/delfino-core/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/radeklat/delfino-core/compare/1.0.3...1.1.0

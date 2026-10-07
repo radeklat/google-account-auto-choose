@@ -461,14 +461,6 @@ document.addEventListener('DOMContentLoaded', function() {
   function saveConfiguration(silent = false) {
     const updatedRules = collectRulesFromForm();
 
-    // Check if we have at least one rule
-    if (updatedRules.length === 0) {
-      if (!silent) {
-        alert('Please add at least one rule to enable the addon.');
-      }
-      return;
-    }
-
     // Keep the suggestions list in sync with what we're about to persist.
     updateEmailSuggestionsFromRules(updatedRules);
 
@@ -526,7 +518,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // File pickers inside extension popups are unreliable because the popup can be destroyed
     // when the native dialog opens. Use a dedicated extension page for restore.
     try {
-      Promise.resolve(browser.tabs.create({ url: browser.runtime.getURL('src/restore.html') }))
+      // Relative to popup.html: the build moves src/* to the addon root.
+      Promise.resolve(browser.tabs.create({ url: new URL('restore.html', window.location.href).href }))
         .then(() => {
           // Close the popup UI to avoid leaving it hanging behind the restore tab.
           window.close();

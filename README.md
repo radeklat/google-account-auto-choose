@@ -71,11 +71,17 @@ The addon will automatically check for updates every 24 hours. When a new versio
 
 #### Option 2: Temporary Installation (Development/Testing)
 
+> **Warning:** Use a separate Firefox profile for testing. A temporary addon has the same ID as the installed addon.
+> When Firefox removes the temporary addon, it also deletes the addon's local data, and the installed addon starts
+> again with empty settings. Make a **Backup** first if you test in your main profile.
+
 1. Download or clone this repository
-2. Open Firefox and navigate to `about:debugging`
-3. Click "This Firefox" in the left sidebar
-4. Click "Load Temporary Add-on"
-5. Select the `manifest.json` file from this project
+2. Start Firefox with a test profile: `firefox -P test --no-remote`
+   (create the profile in the dialog that opens, or with `firefox -CreateProfile test`)
+3. Open Firefox and navigate to `about:debugging`
+4. Click "This Firefox" in the left sidebar
+5. Click "Load Temporary Add-on"
+6. Select the `manifest.json` file from this project
 
 **Note**: Temporary installations don't support automatic updates and will be removed when Firefox restarts.
 
@@ -232,7 +238,9 @@ google-account-auto-choose/
 ## Development Workflow
 
 1. **Make Changes**: Edit files in the `src/` directory
-2. **Test**: Reload the addon in Firefox's `about:debugging` page
+2. **Test**: Reload the addon in Firefox's `about:debugging` page. Use a separate test profile
+   (`firefox -P test --no-remote`), see the warning in [Temporary Installation](#option-2-temporary-installation-developmenttesting).
+   To test Firefox Sync, sign in to Sync in two test profiles and turn on "Add-ons".
 3. **Repeat**: Make changes and rebuild as needed
 
 ## Icon Management
