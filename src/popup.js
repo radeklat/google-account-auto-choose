@@ -7,12 +7,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const helpToggle = document.getElementById('help-toggle');
   const addonEnabledCheckbox = document.getElementById('addon-enabled');
   const autoCloseConfirmationCheckbox = document.getElementById('auto-close-confirmation');
+  const autoConfirmCheckbox = document.getElementById('auto-confirm');
   const resetSuccessCountsBtn = document.getElementById('reset-success-counts');
   const emailSuggestionsDatalistId = 'email-suggestions';
 
   let currentRules = [];
   let addonEnabled = true;
   let autoCloseConfirmation = true;
+  let autoConfirm = false;
   let autoCloseDelay = 10000; // Default 10 seconds
   let autoSaveTimeout = null;
 
@@ -31,6 +33,10 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   autoCloseConfirmationCheckbox.addEventListener('change', () => {
     updateAutoCloseConfirmation();
+    autoSave();
+  });
+  autoConfirmCheckbox.addEventListener('change', () => {
+    autoConfirm = autoConfirmCheckbox.checked;
     autoSave();
   });
 
@@ -87,6 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
       enabled,
       autoCloseConfirmation: autoClose,
       autoCloseDelay: delayMs,
+      autoConfirm: autoConfirmCheckbox ? autoConfirmCheckbox.checked : false,
       rules
     };
   }
@@ -116,15 +123,17 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function loadConfiguration() {
-    browser.storage.local.get(['enabled', 'rules', 'autoCloseConfirmation', 'autoCloseDelay']).then((result) => {
+    browser.storage.local.get(['enabled', 'rules', 'autoCloseConfirmation', 'autoCloseDelay', 'autoConfirm']).then((result) => {
       addonEnabled = result.enabled !== undefined ? result.enabled : true;
       currentRules = result.rules || [];
       autoCloseConfirmation = result.autoCloseConfirmation !== undefined ? result.autoCloseConfirmation : true;
       autoCloseDelay = result.autoCloseDelay !== undefined ? result.autoCloseDelay : 10000;
+      autoConfirm = result.autoConfirm === true;
       
       // Update UI
       addonEnabledCheckbox.checked = addonEnabled;
       autoCloseConfirmationCheckbox.checked = autoCloseConfirmation;
+      autoConfirmCheckbox.checked = autoConfirm;
       updateAutoCloseDelayUI();
       ensureEmailSuggestionsDatalist();
       updateEmailSuggestionsFromRules(currentRules);
@@ -467,7 +476,8 @@ document.addEventListener('DOMContentLoaded', function() {
       enabled: addonEnabled,
       rules: updatedRules,
       autoCloseConfirmation: autoCloseConfirmation,
-      autoCloseDelay: autoCloseDelay
+      autoCloseDelay: autoCloseDelay,
+      autoConfirm
     }).then(() => {
       currentRules = updatedRules;
       updateEmailSuggestionsFromRules(currentRules);
@@ -545,6 +555,7 @@ document.addEventListener('DOMContentLoaded', function() {
       enabled,
       autoCloseConfirmation: autoCloseConfirmationValue,
       autoCloseDelay: delayMs,
+      autoConfirm: normalizeBoolean(parsed.autoConfirm, false),
       rules: normalizedRules
     };
   }

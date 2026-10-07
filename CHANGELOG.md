@@ -12,6 +12,10 @@ Types of changes are:
 
 ## [Unreleased]
 
+### Features
+
+- Optional global auto-confirm of passkey ("Continue") and OAuth consent ("Allow") pages, e.g. for `gcloud auth login`.
+
 ## [1.1.0] - 2025-12-16
 
 ### Features
