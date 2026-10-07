@@ -117,6 +117,11 @@ Each rule can now include a custom auto-close pattern that will trigger tab clos
 - **Example**: `.*done=1` for SAML authentication flows
 - **Optional**: Leave empty to use the default confirmation detection methods
 
+**Auto-confirm passkey and consent pages** (global, off by default): clicks "Continue" on the
+passkey page and "Allow" on the OAuth consent page (e.g. `gcloud auth login`). "Allow" is clicked
+only when the consent page account is an email of an enabled rule. Note: this grants access to
+any app that asks for consent for such account.
+
 ### Setting Up Rules
 
 1. Click the addon icon in your Firefox toolbar
@@ -146,6 +151,12 @@ Each rule can now include a custom auto-close pattern that will trigger tab clos
 - **Match**: `.*/drive/.*`
 - **Email**: `user@gmail.com`
 - **Auto-close**: `.*/success.*` (matches any URL containing `/success`)
+
+#### Google Cloud CLI (`gcloud auth login`)
+- **Name**: gcloud
+- **Match**: `32555940559\.apps\.googleusercontent\.com` (gcloud OAuth client ID, present on all pages of the flow)
+- **Email**: `user@company.com`
+- **Auto-close**: `docs\.cloud\.google\.com/sdk/auth_success`
 
 ### Regex Pattern Examples
 

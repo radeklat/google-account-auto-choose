@@ -8,6 +8,9 @@ const DEFAULT_CONFIG = {
   
   // Auto-close delay in milliseconds (default: 10 seconds)
   "autoCloseDelay": 10000,
+
+  // Auto-click "Continue" on passkey and "Allow" on OAuth consent pages
+  "autoConfirm": false,
   
   // Example configuration structure:
   // "rules": [
@@ -75,6 +78,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       enabled: message.enabled !== undefined ? message.enabled : true,
       autoCloseConfirmation: message.autoCloseConfirmation !== undefined ? message.autoCloseConfirmation : true,
       autoCloseDelay: message.autoCloseDelay !== undefined ? message.autoCloseDelay : 10000,
+      autoConfirm: message.autoConfirm === true,
       rules: message.rules 
     }).then(() => {
       sendResponse({ success: true });

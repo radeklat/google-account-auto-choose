@@ -3,9 +3,10 @@
   'use strict';
 
   // Configuration and state
-  let config = { enabled: true, rules: [] };
+  let config = { enabled: true, autoConfirm: false, rules: [] };
   let isProcessing = false;
   let successfulRulesThisSession = new Set(); // Track successful rules in current session
+  const confirmedUrls = new Set(); // Avoid clicking the same confirmation page twice
 
   // Initialize the account chooser functionality
   function init() {
@@ -16,7 +17,11 @@
       loadConfiguration().then(() => {
         // Only process if addon is enabled and there are rules
         if (config.enabled && config.rules.length > 0) {
-          processAccountSelection();
+          if (isPasskeyPage() || isConsentPage()) {
+            processConfirmation();
+          } else {
+            processAccountSelection();
+          }
         } else if (!config.enabled) {
           console.log('Google Account Auto-Chooser is disabled');
         } else {
@@ -34,6 +39,16 @@
   // Check if current page is Google account chooser
   function isAccountChooserPage() {
     return window.location.href.includes('accounts.google.com');
+  }
+
+  // "Use your passkey to confirm it's really you" page
+  function isPasskeyPage() {
+    return window.location.pathname.includes('/challenge/pk');
+  }
+
+  // OAuth "<app> wants access to your Google Account" page
+  function isConsentPage() {
+    return /\/signin\/oauth\/.*consent/.test(window.location.pathname);
   }
 
   // Check if this is a new login session (different from previous URL)
@@ -67,8 +82,9 @@
 
   // Load configuration from storage
   function loadConfiguration() {
-    return browser.storage.local.get(['enabled', 'rules']).then((result) => {
+    return browser.storage.local.get(['enabled', 'rules', 'autoConfirm']).then((result) => {
       config.enabled = result.enabled !== undefined ? result.enabled : true;
+      config.autoConfirm = result.autoConfirm === true;
       config.rules = result.rules || [];
       return config;
     });
@@ -131,30 +147,70 @@
     return null;
   }
 
-  // Wait for account elements to appear on the page
-  function waitForAccounts() {
+  // Wait for an element matching the selector to appear on the page
+  function waitForElement(selector) {
     return new Promise((resolve, reject) => {
       const maxAttempts = 50; // 5 seconds with 100ms intervals
       let attempts = 0;
 
-      const checkForAccounts = () => {
+      const check = () => {
         attempts++;
-        
-        const accounts = document.querySelectorAll('[data-email]');
-        if (accounts.length > 0) {
-          resolve(accounts);
+
+        const element = document.querySelector(selector);
+        if (element) {
+          resolve(element);
           return;
         }
 
         if (attempts >= maxAttempts) {
-          reject(new Error('Timeout waiting for accounts to load'));
+          reject(new Error(`Timeout waiting for element: ${selector}`));
           return;
         }
 
-        setTimeout(checkForAccounts, 100);
+        setTimeout(check, 100);
       };
 
-      checkForAccounts();
+      check();
+    });
+  }
+
+  // Wait for account elements to appear on the page
+  function waitForAccounts() {
+    return waitForElement('[data-email]');
+  }
+
+  // Click "Continue" on passkey page or "Allow" on consent page
+  function processConfirmation() {
+    const url = window.location.href;
+    if (!config.autoConfirm || confirmedUrls.has(url)) {
+      return;
+    }
+
+    // Google button ids/jsnames, not labels, so it works in any UI language
+    const selector = isConsentPage()
+      ? '#submit_approve_access button'
+      : '[data-primary-action-label] [jsname="Njthtb"] button';
+
+    confirmedUrls.add(url);
+    waitForElement(selector).then((button) => {
+      // Grant consent only for accounts configured in enabled rules
+      if (isConsentPage()) {
+        const account = document.querySelector('[data-email]');
+        const email = account && account.getAttribute('data-email');
+        if (!config.rules.some((rule) => rule.enabled !== false && rule.email === email)) {
+          console.log('Consent page account not in any enabled rule, skipping auto-confirm');
+          return;
+        }
+      }
+
+      // Restart auto-close time window, user may have spent time on passkey prompt
+      browser.runtime.sendMessage({ action: 'accountSelected' }).catch((error) => {
+        console.error('Error tracking confirmation:', error);
+      });
+      button.click();
+    }).catch((error) => {
+      confirmedUrls.delete(url);
+      console.error('Error waiting for confirmation button:', error);
     });
   }
 
