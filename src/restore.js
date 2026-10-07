@@ -80,14 +80,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
           new RegExp(rule.urlPattern);
         } catch (error) {
-          throw new Error(`Invalid regex pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`);
+          throw new Error(`Invalid regex pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`, { cause: error });
         }
       }
       if (rule.autoClosePattern && rule.autoClosePattern.trim()) {
         try {
           new RegExp(rule.autoClosePattern);
         } catch (error) {
-          throw new Error(`Invalid auto-close pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`);
+          throw new Error(`Invalid auto-close pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`, { cause: error });
         }
       }
     }
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         parsed = JSON.parse(text);
       } catch (e) {
-        throw new Error('Selected file is not valid JSON.');
+        throw new Error('Selected file is not valid JSON.', { cause: e });
       }
 
       setStatus('Validating backup…');

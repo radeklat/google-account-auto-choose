@@ -3,9 +3,9 @@
   'use strict';
 
   // Configuration and state
-  let config = { enabled: true, autoConfirm: false, rules: [] };
+  const config = { enabled: true, autoConfirm: false, rules: [] };
   let isProcessing = false;
-  let successfulRulesThisSession = new Set(); // Track successful rules in current session
+  const successfulRulesThisSession = new Set(); // Track successful rules in current session
   const confirmedUrls = new Set(); // Avoid clicking the same confirmation page twice
 
   // Initialize the account chooser functionality

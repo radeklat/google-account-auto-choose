@@ -1,16 +1,16 @@
 // Default configuration - users should configure this based on their needs
 const DEFAULT_CONFIG = {
   // Global addon enabled/disabled state
-  "enabled": true,
+  'enabled': true,
   
   // Auto-close confirmation pages after account selection
-  "autoCloseConfirmation": true,
+  'autoCloseConfirmation': true,
   
   // Auto-close delay in milliseconds (default: 10 seconds)
-  "autoCloseDelay": 10000,
+  'autoCloseDelay': 10000,
 
   // Auto-click "Continue" on passkey and "Allow" on OAuth consent pages
-  "autoConfirm": false,
+  'autoConfirm': false,
   
   // Example configuration structure:
   // "rules": [
@@ -31,7 +31,7 @@ const DEFAULT_CONFIG = {
   // ]
   
   // Leave empty for user configuration
-  "rules": []
+  'rules': []
 };
 
 // Track when account selection happens for time-based auto-close
@@ -126,7 +126,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
           rules[ruleIndex].successCount++;
           
           // Save the updated rules
-          return browser.storage.sync.set({ rules: rules });
+          return browser.storage.sync.set({ rules });
         }
       }).then(() => {
         console.log(`Google Account Auto-Chooser: Success count incremented for rule "${message.ruleName}"`);

@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
         name: name || `Rule ${index + 1}`,
         urlPattern: urlPattern || '',
         email: email || '',
-        enabled: enabled,
+        enabled,
         autoClosePattern: autoClosePattern || '',
         successCount: existingRule.successCount || 0
       });
@@ -503,8 +503,8 @@ document.addEventListener('DOMContentLoaded', function() {
     browser.storage.sync.set({ 
       enabled: addonEnabled,
       rules: updatedRules,
-      autoCloseConfirmation: autoCloseConfirmation,
-      autoCloseDelay: autoCloseDelay,
+      autoCloseConfirmation,
+      autoCloseDelay,
       autoConfirm
     }).then(() => {
       currentRules = updatedRules;
@@ -597,14 +597,14 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
           new RegExp(rule.urlPattern);
         } catch (error) {
-          throw new Error(`Invalid regex pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`);
+          throw new Error(`Invalid regex pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`, { cause: error });
         }
       }
       if (rule.autoClosePattern && rule.autoClosePattern.trim()) {
         try {
           new RegExp(rule.autoClosePattern);
         } catch (error) {
-          throw new Error(`Invalid auto-close pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`);
+          throw new Error(`Invalid auto-close pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`, { cause: error });
         }
       }
     }
