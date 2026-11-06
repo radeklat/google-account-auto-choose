@@ -69,8 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const autoCloseDelay = normalizeNonNegativeInt(parsed.autoCloseDelay, 10000) || 10000;
 
     const autoConfirm = normalizeBoolean(parsed.autoConfirm, false);
+    const passkeyPromptDelay = normalizeNonNegativeInt(parsed.passkeyPromptDelay, 5000);
 
-    return { enabled, autoCloseConfirmation, autoCloseDelay, autoConfirm, rules: normalizedRules };
+    return { enabled, autoCloseConfirmation, autoCloseDelay, autoConfirm, passkeyPromptDelay, rules: normalizedRules };
   }
 
   function validateRulesRegexes(rules) {
@@ -130,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
         autoCloseConfirmation: normalized.autoCloseConfirmation,
         autoCloseDelay: normalized.autoCloseDelay,
         autoConfirm: normalized.autoConfirm,
+        passkeyPromptDelay: normalized.passkeyPromptDelay,
         rules: normalized.rules
       });
 

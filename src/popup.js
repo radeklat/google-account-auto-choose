@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let autoCloseConfirmation = true;
   let autoConfirm = false;
   let autoCloseDelay = 10000; // Default 10 seconds
+  let passkeyPromptDelay = 5000;
   let autoSaveTimeout = null;
 
   // Load existing configuration
@@ -53,6 +54,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  const passkeyPromptDelayInput = document.getElementById('passkey-prompt-delay');
+  passkeyPromptDelayInput.addEventListener('input', () => {
+    passkeyPromptDelay = parseSecondsToMs(passkeyPromptDelayInput.value, 5000);
+    autoSave();
+  });
+
   function toggleHelp() {
     helpToggle.classList.toggle('expanded');
   }
@@ -85,6 +92,13 @@ document.addEventListener('DOMContentLoaded', function() {
     return seconds * 1000;
   }
 
+  // Unlike auto-close delay, 0 is valid (no delay)
+  function parseSecondsToMs(value, defaultMs) {
+    const seconds = parseInt(String(value), 10);
+    if (!Number.isFinite(seconds) || seconds < 0) return defaultMs;
+    return seconds * 1000;
+  }
+
   function getConfigFromCurrentUI() {
     // Preserve any in-flight edits before exporting.
     const rules = collectRulesFromForm();
@@ -98,6 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
       autoCloseConfirmation: autoClose,
       autoCloseDelay: delayMs,
       autoConfirm: autoConfirmCheckbox ? autoConfirmCheckbox.checked : false,
+      passkeyPromptDelay: parseSecondsToMs(passkeyPromptDelayInput.value, 5000),
       rules
     };
   }
@@ -127,17 +142,19 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function loadConfiguration() {
-    browser.storage.sync.get(['enabled', 'rules', 'autoCloseConfirmation', 'autoCloseDelay', 'autoConfirm']).then((result) => {
+    browser.storage.sync.get(['enabled', 'rules', 'autoCloseConfirmation', 'autoCloseDelay', 'autoConfirm', 'passkeyPromptDelay']).then((result) => {
       addonEnabled = result.enabled !== undefined ? result.enabled : true;
       currentRules = result.rules || [];
       autoCloseConfirmation = result.autoCloseConfirmation !== undefined ? result.autoCloseConfirmation : true;
       autoCloseDelay = result.autoCloseDelay !== undefined ? result.autoCloseDelay : 10000;
       autoConfirm = result.autoConfirm === true;
+      passkeyPromptDelay = normalizeNonNegativeInt(result.passkeyPromptDelay, 5000);
       
       // Update UI
       addonEnabledCheckbox.checked = addonEnabled;
       autoCloseConfirmationCheckbox.checked = autoCloseConfirmation;
       autoConfirmCheckbox.checked = autoConfirm;
+      passkeyPromptDelayInput.value = Math.round(passkeyPromptDelay / 1000);
       updateAutoCloseDelayUI();
       ensureEmailSuggestionsDatalist();
       updateEmailSuggestionsFromRules(currentRules);
@@ -497,7 +514,8 @@ document.addEventListener('DOMContentLoaded', function() {
       rules: updatedRules,
       autoCloseConfirmation,
       autoCloseDelay,
-      autoConfirm
+      autoConfirm,
+      passkeyPromptDelay
     }).then(() => {
       currentRules = updatedRules;
       updateEmailSuggestionsFromRules(currentRules);
@@ -579,6 +597,7 @@ document.addEventListener('DOMContentLoaded', function() {
       autoCloseConfirmation: autoCloseConfirmationValue,
       autoCloseDelay: delayMs,
       autoConfirm: normalizeBoolean(parsed.autoConfirm, false),
+      passkeyPromptDelay: normalizeNonNegativeInt(parsed.passkeyPromptDelay, 5000),
       rules: normalizedRules
     };
   }

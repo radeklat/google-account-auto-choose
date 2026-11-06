@@ -129,6 +129,11 @@ passkey page and "Allow" on the OAuth consent page (e.g. `gcloud auth login`). "
 only when the consent page account is an email of an enabled rule. Note: this grants access to
 any app that asks for consent for such account.
 
+**Passkey prompt delay** (global, 5 seconds by default): wait before clicking "Continue" on the
+passkey page. Password managers (e.g. 1Password) need time to hook the page, otherwise the browser
+native passkey prompt appears instead. Set to `0` to click immediately. Auto-click is skipped if
+you click "Continue" yourself during the delay.
+
 ### Setting Up Rules
 
 1. Click the addon icon in your Firefox toolbar
@@ -237,11 +242,28 @@ google-account-auto-choose/
 
 ## Development Workflow
 
-1. **Make Changes**: Edit files in the `src/` directory
-2. **Test**: Reload the addon in Firefox's `about:debugging` page. Use a separate test profile
-   (`firefox -P test --no-remote`), see the warning in [Temporary Installation](#option-2-temporary-installation-developmenttesting).
-   To test Firefox Sync, sign in to Sync in two test profiles and turn on "Add-ons".
-3. **Repeat**: Make changes and rebuild as needed
+1. One time setup for auto-opened links in Firefox:
+   ```shell
+   cat > ~/.local/bin/firefox-testing <<'EOF'
+   #!/bin/sh
+   exec firefox -P google-account-auto-choose-testing "$@"
+   EOF
+   chmod +x ~/.local/bin/firefox-testing
+   ```
+2. Edit files in the `src/` directory
+3. Open Firefox in a test profile:
+   ```shell
+   firefox -P google-account-auto-choose-testing &
+   ```
+4. Add addon as temporary in Firefox's `about:debugging` page. See the warning in [Temporary Installation](#option-2-temporary-installation-developmenttesting).
+5. Restore data from a backup if you want to test with existing settings.
+6. To test Firefox Sync, sign in to Sync in two test profiles and turn on "Add-ons".
+7. Let apps open the test profile automatically with `firefox-testing`. For example:
+   ```shell
+   BROWSER=~/.local/bin/firefox-testing gcloud auth login
+   ```
+8. Make changes as needed.
+9. Reload the addon in Firefox's `about:debugging` page.
 
 ## Icon Management
 

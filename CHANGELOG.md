@@ -12,6 +12,12 @@ Types of changes are:
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-06
+
+### Features
+
+- Global "Passkey prompt delay" option (5 seconds by default): wait before auto-confirming the passkey page, so password managers (e.g. 1Password) can show their passkey prompt. Auto-confirm is skipped if you click "Continue" yourself during the delay.
+
 ## [1.2.2] - 2026-10-07
 
 ### Fixes
@@ -68,7 +74,8 @@ Types of changes are:
 
 - Initial release
 
-[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.2.2...HEAD
+[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.3.0...HEAD
+[1.3.0]: https://github.com/radeklat/delfino-core/compare/1.2.2...1.3.0
 [1.2.2]: https://github.com/radeklat/delfino-core/compare/1.2.1...1.2.2
 [1.2.1]: https://github.com/radeklat/delfino-core/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/radeklat/delfino-core/compare/1.1.0...1.2.0

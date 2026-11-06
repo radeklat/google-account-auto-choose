@@ -11,6 +11,9 @@ const DEFAULT_CONFIG = {
 
   // Auto-click "Continue" on passkey and "Allow" on OAuth consent pages
   'autoConfirm': false,
+
+  // Delay before auto-clicking "Continue" on passkey page, lets password managers hook the page
+  'passkeyPromptDelay': 5000,
   
   // Example configuration structure:
   // "rules": [
@@ -82,6 +85,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       autoCloseConfirmation: message.autoCloseConfirmation !== undefined ? message.autoCloseConfirmation : true,
       autoCloseDelay: message.autoCloseDelay !== undefined ? message.autoCloseDelay : 10000,
       autoConfirm: message.autoConfirm === true,
+      passkeyPromptDelay: message.passkeyPromptDelay !== undefined ? message.passkeyPromptDelay : 5000,
       rules: message.rules 
     }).then(() => {
       sendResponse({ success: true });

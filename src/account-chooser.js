@@ -3,7 +3,7 @@
   'use strict';
 
   // Configuration and state
-  const config = { enabled: true, autoConfirm: false, rules: [] };
+  const config = { enabled: true, autoConfirm: false, passkeyPromptDelay: 5000, rules: [] };
   let isProcessing = false;
   const successfulRulesThisSession = new Set(); // Track successful rules in current session
   const confirmedUrls = new Set(); // Avoid clicking the same confirmation page twice
@@ -82,9 +82,12 @@
 
   // Load configuration from storage
   function loadConfiguration() {
-    return browser.storage.sync.get(['enabled', 'rules', 'autoConfirm']).then((result) => {
+    return browser.storage.sync.get(['enabled', 'rules', 'autoConfirm', 'passkeyPromptDelay']).then((result) => {
       config.enabled = result.enabled !== undefined ? result.enabled : true;
       config.autoConfirm = result.autoConfirm === true;
+      config.passkeyPromptDelay = Number.isFinite(result.passkeyPromptDelay) && result.passkeyPromptDelay >= 0
+        ? result.passkeyPromptDelay
+        : 5000;
       config.rules = result.rules || [];
       return config;
     });
@@ -192,7 +195,34 @@
       : '[data-primary-action-label] [jsname="Njthtb"] button';
 
     confirmedUrls.add(url);
+    let userClicked = false;
     waitForElement(selector).then((button) => {
+      // Password managers (1Password) miss the WebAuthn request if "Continue" is clicked too early
+      if (isConsentPage() || config.passkeyPromptDelay <= 0) {
+        return button;
+      }
+      // Document level, Google may replace the button during the delay
+      const onUserClick = (event) => {
+        if (event.isTrusted && event.target.closest(selector)) {
+          userClicked = true;
+          document.removeEventListener('click', onUserClick, true);
+          trackConfirmation();
+        }
+      };
+      document.addEventListener('click', onUserClick, true);
+      return new Promise((resolve) => setTimeout(resolve, config.passkeyPromptDelay)).then(() => {
+        document.removeEventListener('click', onUserClick, true);
+        // Second click would restart the passkey prompt the user already opened
+        if (userClicked || window.location.href !== url) {
+          return null;
+        }
+        return waitForElement(selector);
+      });
+    }).then((button) => {
+      if (!button) {
+        return;
+      }
+
       // Grant consent only for accounts configured in enabled rules
       if (isConsentPage()) {
         const account = document.querySelector('[data-email]');
@@ -203,14 +233,18 @@
         }
       }
 
-      // Restart auto-close time window, user may have spent time on passkey prompt
-      browser.runtime.sendMessage({ action: 'accountSelected' }).catch((error) => {
-        console.error('Error tracking confirmation:', error);
-      });
+      trackConfirmation();
       button.click();
     }).catch((error) => {
       confirmedUrls.delete(url);
       console.error('Error waiting for confirmation button:', error);
+    });
+  }
+
+  // Restart auto-close time window, user may have spent time on passkey prompt
+  function trackConfirmation() {
+    browser.runtime.sendMessage({ action: 'accountSelected' }).catch((error) => {
+      console.error('Error tracking confirmation:', error);
     });
   }
 
