@@ -45,7 +45,7 @@ Use this doc to make safe, repo-aligned changes quickly.
 ### Account selection logic (high-level)
 
 - Triggered on Google’s account chooser page (`accounts.google.com/.../accountchooser`)
-- Extracts a **site ID** from the URL (`app_domain`/`redirect_uri` host, SAML Issuer, `continue` host, `client_id`).
+- Extracts a **site ID** from the URL (`app_domain`/`redirect_uri` host, SAML ACS URL host or Issuer, `continue` host, `client_id`).
   Read `documentation/SITE_ID_EXTRACTION.md` before adding a new source; keep it and `tests/site.test.js` up to date
 - Compares it against user-configured **site patterns** (`*` wildcard, no regex)
 - Picks the configured **email/account** and clicks the matching account element

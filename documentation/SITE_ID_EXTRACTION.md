@@ -12,7 +12,7 @@ The first step that gives a value wins.
 | # | Sign-in type | Source | Example site ID |
 |---|--------------|--------|-----------------|
 | 1 | OAuth / OIDC | Host of the top-level `app_domain` parameter, else host of `redirect_uri` (`http(s)` only) | `app.dev.example.com` |
-| 2 | SAML | `continue` → `SAMLRequest` → `<saml:Issuer>`: its host, or the raw value if it is not a URL (e.g. a URN). XML comments are ignored; more than one Issuer gives no value | `vpn.example.com` |
+| 2 | SAML | `continue` → `SAMLRequest`: host of `AssertionConsumerServiceURL`, else `<saml:Issuer>` (its host, or the raw value if it is not a URL, e.g. a URN). XML comments are ignored; more than one `AuthnRequest` or `Issuer` gives no value | `vpn.example.com`, `auth.example.com` |
 | 3 | Google services | Host of `continue`, if it is not `accounts.google.com` | `mail.google.com` |
 | 4 | Local CLI apps, fallback | `client_id`: top-level, else from `continue` | `32555940559.apps.googleusercontent.com` |
 
@@ -51,17 +51,28 @@ accountchooser
 ```
 
 - `idpid` is the same for all SAML apps of one Google Workspace. Do not use it.
-- `SAMLRequest` uses the SAML HTTP-Redirect binding: `base64(DEFLATE(AuthnRequest XML))`
-  ([OASIS SAML 2.0 Bindings, section 3.4.4.1](https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf)).
-  The addon decodes it with `atob` and `DecompressionStream('deflate-raw')`.
-- The decoded XML has the service provider entity ID:
+- `SAMLRequest` encoding depends on the SAML binding
+  ([OASIS SAML 2.0 Bindings](https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf)):
+  - HTTP-Redirect (section 3.4.4.1): `base64(DEFLATE(XML))`.
+  - HTTP-POST (section 3.5.4), `continue` has `omethod=POST`: `base64(XML)`, not deflated.
+
+  The addon decodes base64 with `atob`. If the result starts with `<`, it is the XML. Else the addon inflates it with
+  `DecompressionStream('deflate-raw')`.
+- The decoded XML has the service provider entity ID (`Issuer`) and, optionally, the URL that gets the response
+  (`AssertionConsumerServiceURL`):
   ```xml
   <samlp:AuthnRequest … Destination="https://accounts.google.com/o/saml2/idp?idpid=C0abc123">
     <saml:Issuer>https://vpn.example.com/saml/sp/metadata/user</saml:Issuer>
   </samlp:AuthnRequest>
   ```
-
-SAML with the HTTP-POST binding does not put `SAMLRequest` in the URL. Step 2 then gives no value.
+- Brokers such as Okta send a generic `Issuer`, the same for all their customers. The ACS URL is on the app's own host,
+  so it wins:
+  ```xml
+  <saml2p:AuthnRequest … AssertionConsumerServiceURL="https://auth.example.com/sso/saml2/0oa123">
+    <saml2:Issuer>https://www.okta.com/saml2/service-provider/spabc</saml2:Issuer>
+  </saml2p:AuthnRequest>
+  ```
+  Site ID: `auth.example.com`, not `www.okta.com`.
 
 ## Pattern matching
 

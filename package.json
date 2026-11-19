@@ -1,6 +1,6 @@
 {
   "name": "google-account-auto-chooser",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Firefox addon that automatically selects Google accounts per site",
   "main": "manifest.json",
   "scripts": {
