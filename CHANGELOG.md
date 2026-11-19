@@ -12,6 +12,18 @@ Types of changes are:
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-19
+
+### Breaking changes
+
+- Rules match a **Site** instead of a regex (**Match**). Existing rules do not match any more: fill in the Site, or delete them and use the new site prompt.
+
+### Features
+
+- Site ID from the account chooser URL: app host for OAuth/OIDC, service provider host for SAML, service host for Google services, OAuth client ID for apps on `localhost` (e.g. `gcloud`). See `documentation/SITE_ID_EXTRACTION.md`.
+- `*` in Site matches any text, e.g. `app.*.example.com` for all environments of one app in one rule.
+- Prompt on the account chooser when no rule matches the site: pick an account to save a rule and select the account, or "Never ask for this site".
+
 ## [1.4.0] - 2026-11-19
 
 ### Features
@@ -80,7 +92,8 @@ Types of changes are:
 
 - Initial release
 
-[Unreleased]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.4.0...HEAD
+[Unreleased]: https://github.com/radeklat/google-account-auto-choose/compare/releases/2.0.0...HEAD
+[2.0.0]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.4.0...releases/2.0.0
 [1.4.0]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.3.0...releases/1.4.0
 [1.3.0]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.2.2...releases/1.3.0
 [1.2.2]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.2.1...releases/1.2.2

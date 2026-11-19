@@ -1,11 +1,12 @@
 {
   "name": "google-account-auto-chooser",
-  "version": "1.4.0",
-  "description": "Firefox addon that automatically selects Google accounts based on URL patterns",
+  "version": "2.0.0",
+  "description": "Firefox addon that automatically selects Google accounts per site",
   "main": "manifest.json",
   "scripts": {
     "build": "make build",
     "lint": "make lint",
+    "test": "make test",
     "release": "make release",
     "version": "node scripts/sync-manifest-version.js"
   },

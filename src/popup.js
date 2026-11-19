@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ruleElements.forEach((ruleElement, index) => {
       const enabled = ruleElement.querySelector(`#enabled-${index}`).checked;
       const name = ruleElement.querySelector(`#name-${index}`).value.trim();
-      const urlPattern = ruleElement.querySelector(`#pattern-${index}`).value.trim();
+      const site = ruleElement.querySelector(`#site-${index}`).value.trim();
       const email = ruleElement.querySelector(`#email-${index}`).value.trim();
       const autoClosePattern = ruleElement.querySelector(`#auto-close-${index}`).value.trim();
 
@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       updatedRules.push({
         name: name || `Rule ${index + 1}`,
-        urlPattern: urlPattern || '',
+        site,
         email: email || '',
         enabled,
         autoClosePattern: autoClosePattern || '',
@@ -355,7 +355,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     const nameRow = createFormRow('Name:', `name-${index}`, 'text', rule.name, 'e.g., Work SAML, Personal Gmail');
-    const patternRow = createFormRow('Match:', `pattern-${index}`, 'text', rule.urlPattern, 'e.g., .*/saml2/.*');
+    const siteRow = createFormRow('Site:', `site-${index}`, 'text', rule.site, 'e.g., app.*.example.com');
     const emailRow = createFormRow('Email:', `email-${index}`, 'email', rule.email, 'e.g., user@company.com', {
       list: emailSuggestionsDatalistId
     });
@@ -364,14 +364,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Append all elements to ruleDiv
     ruleDiv.appendChild(ruleHeader);
     ruleDiv.appendChild(nameRow);
-    ruleDiv.appendChild(patternRow);
+    ruleDiv.appendChild(siteRow);
     ruleDiv.appendChild(emailRow);
     ruleDiv.appendChild(autoCloseRow);
 
     // Add event listeners for auto-save
     const enabledCheckbox = ruleDiv.querySelector(`#enabled-${index}`);
     const nameInput = ruleDiv.querySelector(`#name-${index}`);
-    const patternInput = ruleDiv.querySelector(`#pattern-${index}`);
+    const siteInput = ruleDiv.querySelector(`#site-${index}`);
     const emailInput = ruleDiv.querySelector(`#email-${index}`);
     const autoCloseInput = ruleDiv.querySelector(`#auto-close-${index}`);
 
@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
     nameInput.addEventListener('input', () => {
       autoSave();
     });
-    patternInput.addEventListener('input', () => {
+    siteInput.addEventListener('input', () => {
       autoSave();
     });
     emailInput.addEventListener('input', () => {
@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const newRule = {
       name: '',
-      urlPattern: '',
+      site: '',
       email: '',
       enabled: true, // Start as enabled so users can use it immediately
       autoClosePattern: '', // Initialize auto-close pattern
@@ -490,21 +490,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Keep the suggestions list in sync with what we're about to persist.
     updateEmailSuggestionsFromRules(updatedRules);
 
-    // Test regex patterns for rules that have patterns
     for (let i = 0; i < updatedRules.length; i++) {
       const rule = updatedRules[i];
-      if (rule.urlPattern && rule.enabled) { // Only validate enabled rules with patterns
-        try {
-          new RegExp(rule.urlPattern);
-        } catch (error) {
-          if (!silent) {
-            alert(`Invalid regex pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`);
-          }
-          return;
-        }
-      }
-      
-      // Test auto-close patterns if they exist
       if (rule.autoClosePattern && rule.autoClosePattern.trim()) {
         try {
           new RegExp(rule.autoClosePattern);
@@ -562,75 +549,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  function normalizeBoolean(value, defaultValue) {
-    if (typeof value === 'boolean') return value;
-    return defaultValue;
-  }
-
-  function normalizeString(value, defaultValue = '') {
-    if (value === undefined || value === null) return defaultValue;
-    return String(value);
-  }
-
   function normalizeNonNegativeInt(value, defaultValue = 0) {
     const num = parseInt(String(value), 10);
     if (!Number.isFinite(num) || num < 0) return defaultValue;
     return num;
-  }
-
-  function normalizeConfigFromJson(parsed) {
-    if (!parsed || typeof parsed !== 'object') {
-      throw new Error('Backup file must contain a JSON object.');
-    }
-    if (!Array.isArray(parsed.rules)) {
-      throw new Error('Backup file must contain a "rules" array.');
-    }
-
-    const normalizedRules = parsed.rules.map((rule, idx) => {
-      const r = (rule && typeof rule === 'object') ? rule : {};
-      const name = normalizeString(r.name, '').trim() || `Rule ${idx + 1}`;
-      const urlPattern = normalizeString(r.urlPattern, '').trim();
-      const email = normalizeString(r.email, '').trim();
-      const enabled = normalizeBoolean(r.enabled, true);
-      const autoClosePattern = normalizeString(r.autoClosePattern, '').trim();
-      const successCount = normalizeNonNegativeInt(r.successCount, 0);
-
-      return { name, urlPattern, email, enabled, autoClosePattern, successCount };
-    });
-
-    const enabled = normalizeBoolean(parsed.enabled, true);
-    const autoCloseConfirmationValue = normalizeBoolean(parsed.autoCloseConfirmation, true);
-    const delayMs = normalizeNonNegativeInt(parsed.autoCloseDelay, 10000) || 10000;
-
-    return {
-      enabled,
-      autoCloseConfirmation: autoCloseConfirmationValue,
-      autoCloseDelay: delayMs,
-      autoConfirm: normalizeBoolean(parsed.autoConfirm, false),
-      passkeyPromptDelay: normalizeNonNegativeInt(parsed.passkeyPromptDelay, 5000),
-      showNotification: normalizeBoolean(parsed.showNotification, false),
-      rules: normalizedRules
-    };
-  }
-
-  function validateRulesRegexes(rules) {
-    for (let i = 0; i < rules.length; i++) {
-      const rule = rules[i];
-      if (rule.urlPattern && rule.enabled) {
-        try {
-          new RegExp(rule.urlPattern);
-        } catch (error) {
-          throw new Error(`Invalid regex pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`, { cause: error });
-        }
-      }
-      if (rule.autoClosePattern && rule.autoClosePattern.trim()) {
-        try {
-          new RegExp(rule.autoClosePattern);
-        } catch (error) {
-          throw new Error(`Invalid auto-close pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`, { cause: error });
-        }
-      }
-    }
   }
 
 });

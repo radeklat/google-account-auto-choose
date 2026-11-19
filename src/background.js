@@ -21,15 +21,15 @@ const DEFAULT_CONFIG = {
   // Example configuration structure:
   // "rules": [
   //   {
-  //     "name": "Work SAML",
-  //     "urlPattern": ".*/saml2/.*",
+  //     "name": "Work VPN",
+  //     "site": "vpn.company.com",
   //     "email": "user@company.com",
   //     "enabled": true,
   //     "autoClosePattern": ".*done=1"
   //   },
   //   {
   //     "name": "Personal Gmail",
-  //     "urlPattern": ".*/gmail/.*",
+  //     "site": "mail.google.com",
   //     "email": "user@gmail.com",
   //     "enabled": true,
   //     "autoClosePattern": ""

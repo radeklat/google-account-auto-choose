@@ -1,4 +1,4 @@
-.PHONY: help install clean build lint release sign sign-amo version-patch version-minor version-major
+.PHONY: help install clean build lint test release sign sign-amo version-patch version-minor version-major
 
 help: # Show help for each of the Makefile recipes
 	@grep -E '^[a-zA-Z0-9_-]+:.*#' Makefile | sort | while read -r l; do \
@@ -18,9 +18,12 @@ build: clean # Build the addon into dist/
 	mkdir -p dist/icons
 	cp icons/* dist/icons/ 2>/dev/null || echo 'Icons not found, creating placeholder'
 
-lint: # Run ESLint on src/
-	npx --no-install eslint src/
+lint: # Run ESLint on src/ and tests/
+	npx --no-install eslint src/ tests/
 	npx --no-install web-ext lint --source-dir dist --self-hosted
+
+test: # Run unit tests
+	node --test tests/*.test.js
 
 version-patch: # Bump patch version (no git tag/commit) and sync manifest.json
 	npm version patch --no-git-tag-version

@@ -56,12 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const normalizedRules = parsed.rules.map((rule, idx) => {
       const r = (rule && typeof rule === 'object') ? rule : {};
       const name = normalizeString(r.name, '').trim() || `Rule ${idx + 1}`;
-      const urlPattern = normalizeString(r.urlPattern, '').trim();
+      const site = normalizeString(r.site, '').trim();
       const email = normalizeString(r.email, '').trim();
       const enabled = normalizeBoolean(r.enabled, true);
       const autoClosePattern = normalizeString(r.autoClosePattern, '').trim();
       const successCount = normalizeNonNegativeInt(r.successCount, 0);
-      return { name, urlPattern, email, enabled, autoClosePattern, successCount };
+      return { name, site, email, enabled, autoClosePattern, successCount };
     });
 
     const enabled = normalizeBoolean(parsed.enabled, true);
@@ -78,13 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function validateRulesRegexes(rules) {
     for (let i = 0; i < rules.length; i++) {
       const rule = rules[i];
-      if (rule.urlPattern && rule.enabled) {
-        try {
-          new RegExp(rule.urlPattern);
-        } catch (error) {
-          throw new Error(`Invalid regex pattern in rule "${rule.name || `Rule ${i + 1}`}": ${error.message}`, { cause: error });
-        }
-      }
       if (rule.autoClosePattern && rule.autoClosePattern.trim()) {
         try {
           new RegExp(rule.autoClosePattern);

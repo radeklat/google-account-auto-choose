@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "Google Account Auto-Chooser",
-  "version": "1.4.0",
-  "description": "Automatically selects the appropriate Google account based on the continue URL and auto-closes confirmation pages",
+  "version": "2.0.0",
+  "description": "Automatically selects the appropriate Google account for each site and auto-closes confirmation pages",
   "permissions": [
     "activeTab",
     "notifications",
@@ -24,6 +24,7 @@
         "*://accounts.google.com/*"
       ],
       "js": [
+        "src/site.js",
         "src/account-chooser.js"
       ],
       "run_at": "document_end"
