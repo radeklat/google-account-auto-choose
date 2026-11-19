@@ -282,11 +282,11 @@
       <span class="toggle-icon">▼</span>
     </h4>
     <div class="help-content">
-      <p>This addon automatically selects Google accounts based on URL patterns. Configure rules below:</p>
+      <p>This addon automatically selects a Google account for each site. When a site has no rule, the account chooser shows a prompt to create one. You can also add rules below:</p>
       <ul>
         <li><strong>Enabled:</strong> Enable or disable this specific rule</li>
         <li><strong>Name:</strong> A descriptive name for the rule</li>
-        <li><strong>Match:</strong> Regex pattern to match URL of the correct Google account choice page</li>
+        <li><strong>Site:</strong> Host name of the site that asks for sign-in, e.g. <code>app.example.com</code>. Use <code>*</code> to match any text, e.g. <code>app.*.example.com</code> or <code>*.example.com</code>. Sites on <code>localhost</code> (e.g. <code>gcloud</code>) use the OAuth client ID instead</li>
         <li><strong>Email:</strong> The email address to automatically select</li>
         <li><strong>Auto-close:</strong> Regex pattern to match URL of a possible confirmation page for auto-closing (optional)</li>
         <li><strong>Auto-close within:</strong> Time window in seconds after account selection when auto-close should occur</li>
@@ -296,8 +296,7 @@
       
       <div class="example">
         <strong>Example:</strong><br>
-        URL: https://accounts.google.com/v3/signin/accountchooser?continue=https://accounts.google.com/o/saml2/continue<br>
-        Match: .*/saml2/.*<br>
+        Site: app.*.example.com<br>
         Email: user@company.com<br>
         Auto-close: .*done=1
       </div>

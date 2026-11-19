@@ -26,4 +26,12 @@ module.exports = [
       'prefer-template': 'error',
     },
   },
+  {
+    files: ['tests/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'commonjs',
+      globals: globals.node,
+    },
+  },
 ];

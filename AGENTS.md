@@ -2,8 +2,8 @@
 
 This repository is a **Firefox (Manifest V2) addon** that:
 
-- **Auto-selects a Google account** on the Google account chooser page based on **user rules** (regex patterns matched
-  against the `continue` URL parameter).
+- **Auto-selects a Google account** on the Google account chooser page based on **user rules** (site patterns with `*`
+  matched against a site ID extracted from the chooser URL). Offers to create a rule for a site without one.
 - Optionally **auto-closes “confirmation/success” pages** after account selection (via URL/content heuristics and
   optional per-rule regex).
 
@@ -22,6 +22,7 @@ Use this doc to make safe, repo-aligned changes quickly.
     - `src/popup.js`
 - **Account chooser automation** (runs on Google account pages / chooser):
     - `src/account-chooser.js`
+    - `src/site.js` (site ID extraction and pattern matching, see `documentation/SITE_ID_EXTRACTION.md`)
 - **Auto-close logic** (runs on all URLs, used to close “done/success” confirmation pages):
     - `src/auto-close.js`
 - **Background script** (addon-level wiring, tab management/storage helpers):
@@ -33,7 +34,8 @@ Use this doc to make safe, repo-aligned changes quickly.
 - clean: Remove build output (dist/)
 - help: Show help for each of the Makefile recipes
 - install: Install dev dependencies
-- lint: Run ESLint on src/
+- lint: Run ESLint on src/ and tests/
+- test: Run unit tests
 - release: Create a release (sign + update manifest) via scripts/release.js
 - sign-amo: Sign the addon using web-ext with AMO credentials (self-hosted)
 - sign: Sign the addon using web-ext (self-hosted)
@@ -43,9 +45,11 @@ Use this doc to make safe, repo-aligned changes quickly.
 ### Account selection logic (high-level)
 
 - Triggered on Google’s account chooser page (`accounts.google.com/.../accountchooser`)
-- Extracts the `continue` parameter from the URL
-- Compares it against user-configured **regex rules**
+- Extracts a **site ID** from the URL (`app_domain`/`redirect_uri` host, SAML Issuer, `continue` host, `client_id`).
+  Read `documentation/SITE_ID_EXTRACTION.md` before adding a new source; keep it and `tests/site.test.js` up to date
+- Compares it against user-configured **site patterns** (`*` wildcard, no regex)
 - Picks the configured **email/account** and clicks the matching account element
+- No rule for the site (enabled or disabled) and addon enabled → shows a prompt to create a rule
 
 When modifying this flow:
 
@@ -69,13 +73,13 @@ When modifying auto-close behavior:
 
 ## Storage and configuration expectations
 
-The addon uses `browser.storage.local` to persist:
+The addon uses `browser.storage.sync` to persist:
 
 - A master “enabled” switch (addon on/off)
 - An “auto-close enabled” preference
 - A list of rules, each typically containing:
     - **name** (display label)
-    - **match** (regex string applied to `continue` URL)
+    - **site** (site ID pattern, `*` wildcard)
     - **email** (target account)
     - **autoClose** (optional regex string for confirmation URLs)
 

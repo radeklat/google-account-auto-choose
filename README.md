@@ -1,12 +1,13 @@
 # Google Account Auto-Chooser Firefox Addon
 
-A Firefox addon that automatically selects Google accounts on the account chooser page based on URL patterns and user configuration.
+A Firefox addon that automatically selects Google accounts on the account chooser page, with one rule per site.
 
 ## Features
 
 - **Automatic Account Selection**: Automatically chooses the appropriate Google account when the account chooser page loads
-- **URL Pattern Matching**: Uses regex patterns to match the `continue` parameter in URLs
-- **Configurable Rules**: Set up multiple rules for different scenarios
+- **Site Matching**: Finds the site that asks for sign-in (OAuth, SAML, Google services) from the account chooser URL
+- **New Site Prompt**: On a site without a rule, pick an account once and the addon remembers it
+- **Wildcards**: One rule for many sites with `*`, e.g. `app.*.example.com`
 - **Easy Configuration**: Simple popup interface to manage your rules
 - **Firefox Sync**: Settings and rules sync between browsers signed in to the same Firefox account
 
@@ -17,7 +18,7 @@ A Firefox addon that automatically selects Google accounts on the account choose
 2. Open Firefox → `about:addons` → gear icon → "Install Add-on From File..."
 3. Select the downloaded XPI file and click "Add"
 4. Click the addon icon in your toolbar to configure your rules
-5. Add a rule like: Name: "Work", Match: `.*/saml2/.*`, Email: `your-work@email.com`
+5. Sign in to a site with Google. On the account chooser, the addon asks which account to always use for this site.
 
 ## Installation
 
@@ -92,11 +93,32 @@ The addon starts with an empty configuration. You need to set up rules based on 
 
 ### Understanding the Configuration
 
-The addon works by matching the `continue` parameter in Google account chooser URLs. For example:
+Each rule has a **Site**. The addon finds the site ID of the app that asks for sign-in from the account chooser URL,
+and selects the account of the first enabled rule whose Site matches. Site IDs:
 
-- **URL**: `https://accounts.google.com/v3/signin/accountchooser?continue=https://accounts.google.com/o/saml2/continue`
-- **Continue Parameter**: `https://accounts.google.com/o/saml2/continue`
-- **Pattern**: `.*/saml2/.*` (matches any URL containing `/saml2/`)
+| Sign-in type | Site ID | Example |
+|--------------|---------|---------|
+| OAuth / OIDC | Host name of the app | `app.dev.example.com` |
+| SAML (e.g. VPN) | Host name of the service provider | `vpn.example.com` |
+| Google services | Host name of the service | `mail.google.com` |
+| CLI apps on `localhost` (e.g. `gcloud`) | OAuth client ID | `32555940559.apps.googleusercontent.com` |
+
+**Site patterns:**
+
+- Exact site ID: `app.example.com`
+- `*` matches any text, dots included: `app.*.example.com` matches `app.dev.example.com` and
+  `app.staging.example.com`. `*.example.com` matches all subdomains of `example.com` (not `example.com`).
+- Case-insensitive. Regex is not supported.
+
+**New site prompt:** when the addon is enabled and no rule matches the site, the account chooser shows a prompt. Edit
+the Site (e.g. replace a part with `*`) and the Name, then click an account. The addon saves the rule and selects the
+account. **Never ask for this site** saves a disabled rule, so the prompt does not show again. Delete that rule to see
+the prompt again.
+
+See [documentation/SITE_ID_EXTRACTION.md](documentation/SITE_ID_EXTRACTION.md) for details.
+
+> **Upgrade from 1.x:** regex rules (**Match**) are not supported. Old rules show an empty **Site** and do not match.
+> Fill in the Site, or delete the rules and use the new site prompt.
 
 ### Auto-Close Confirmation Pages
 
@@ -140,37 +162,38 @@ the name of the matched rule and the selected email when an account is auto-sele
 
 ### Setting Up Rules
 
+Use the new site prompt, or add a rule by hand:
+
 1. Click the addon icon in your Firefox toolbar
 2. Click "+ Add New Rule" to create a new rule
-3. Fill in the rule details:
-   - **Name**: A descriptive name (e.g., "Work SAML", "Personal Gmail")
-   - **Match**: Regex pattern to match the continue parameter
+3. Fill in the rule details (saved automatically):
+   - **Name**: A descriptive name (e.g., "Work VPN", "Personal Gmail")
+   - **Site**: Site ID or pattern (see [Understanding the Configuration](#understanding-the-configuration))
    - **Email**: The email address to automatically select
-4. Click "Save Configuration"
 
 ### Example Rules
 
-#### Work Account (SAML)
-- **Name**: Work SAML
-- **Match**: `.*/saml2/.*`
+#### Work VPN (SAML)
+- **Name**: Work VPN
+- **Site**: `vpn.company.com`
 - **Email**: `user@company.com`
 - **Auto-close**: `.*done=1`
 
 #### Personal Gmail
 - **Name**: Personal Gmail  
-- **Match**: `.*/gmail/.*`
+- **Site**: `mail.google.com`
 - **Email**: `user@gmail.com`
 - **Auto-close**: `` (leave empty for default detection)
 
-#### Specific Service
-- **Name**: Google Drive
-- **Match**: `.*/drive/.*`
-- **Email**: `user@gmail.com`
-- **Auto-close**: `.*/success.*` (matches any URL containing `/success`)
+#### All environments of one app
+- **Name**: My app
+- **Site**: `app.*.company.com`
+- **Email**: `user@company.com`
+- **Auto-close**: `` (leave empty for default detection)
 
 #### Google Cloud CLI (`gcloud auth login`)
 - **Name**: gcloud
-- **Match**: `32555940559\.apps\.googleusercontent\.com` (gcloud OAuth client ID, present on all pages of the flow)
+- **Site**: `32555940559.apps.googleusercontent.com` (gcloud OAuth client ID, because the site is `localhost`)
 - **Email**: `user@company.com`
 - **Auto-close**: `docs\.cloud\.google\.com/sdk/auth_success`
 
@@ -186,18 +209,17 @@ Without Firefox Sync, settings stay in the local browser. On update from an olde
 to sync storage automatically.
 
 **Size limit:** Firefox limits one sync item to **8 KB**. All rules are stored in one item, so the total size of all
-rules (names, patterns, emails) must stay below 8 KB. That is approximately 40–80 rules, depending on pattern length.
+rules (names, sites, emails) must stay below 8 KB. That is approximately 40–80 rules, depending on pattern length.
 The popup shows a warning at 80% of the limit. When the limit is exceeded, changes are not saved. Use **Backup** to keep a
 copy of large configurations. See [documentation/SYNC_SIZE_LIMIT.md](documentation/SYNC_SIZE_LIMIT.md) for a possible
 future fix.
 
-### Regex Pattern Examples
+### Site Pattern Examples
 
-- `.*/saml2/.*` - Matches any URL containing `/saml2/`
-- `.*google\.com.*` - Matches any Google domain
-- `.*/mybusiness/.*` - Matches Google My Business URLs
-- `.*calendar.*` - Matches Google Calendar URLs
-- `.*docs.*` - Matches Google Docs URLs
+- `vpn.company.com` - Only this host
+- `*.company.com` - All subdomains of `company.com`
+- `app.*.company.com` - `app.dev.company.com`, `app.staging.company.com`, ...
+- `*.google.com` - All Google services, e.g. `mail.google.com`, `calendar.google.com`
 
 # Development
 
@@ -224,10 +246,15 @@ future fix.
 ```
 google-account-auto-choose/
 ├── src/
+│   ├── account-chooser.js # Content script on Google pages: account selection, new site prompt
+│   ├── auto-close.js      # Content script on all pages: closes confirmation pages
 │   ├── background.js      # Background script for addon logic
-│   ├── content.js         # Content script that runs on Google pages
 │   ├── popup.html         # Configuration popup interface
-│   └── popup.js           # Popup script logic
+│   ├── popup.js           # Popup script logic
+│   ├── restore.html/.js   # Restore from backup page
+│   └── site.js            # Site ID extraction and pattern matching
+├── tests/                 # Unit tests (make test)
+├── documentation/         # Design notes, e.g. SITE_ID_EXTRACTION.md
 ├── icons/                 # Addon icons
 ├── dist/                  # Build output (generated)
 ├── manifest.json          # Addon manifest
@@ -243,6 +270,7 @@ google-account-auto-choose/
 - `make sign` - Sign the addon using web-ext (requires API credentials)
 - `make sign-amo` - Sign the addon with AMO API credentials
 - `make lint` - Run ESLint on source code and validate addon using web-ext linter
+- `make test` - Run unit tests (Node.js built-in test runner)
 
 ## Development Workflow
 
@@ -381,8 +409,8 @@ To create a new release for self-hosting:
 ### Functionality Issues
 
 - **Addon not working**: Make sure you're on the correct Google account chooser page
-- **Wrong account selected**: Check your regex patterns and make sure they're not too broad
-- **No account selected**: Verify your patterns match the actual URLs you're visiting
+- **Wrong account selected**: Check your site patterns and make sure they're not too broad. The first matching enabled rule wins
+- **No account selected**: Open the browser console on the account chooser and compare `Site ID: <id>` with your rule's Site
 - **Build errors**: Make sure all dependencies are installed with `npm install`
 
 ### Debug Steps
@@ -391,7 +419,7 @@ To create a new release for self-hosting:
 2. Verify the addon is loaded in `about:debugging`
 3. Check that content scripts are running on Google pages
 4. Verify your configuration rules are saved correctly
-5. Test with a simple rule first (e.g., `.*` to match any URL)
+5. Test with a simple rule first (e.g., Site `*` to match any site)
 
 ## Contributing
 
