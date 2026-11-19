@@ -99,7 +99,7 @@ and selects the account of the first enabled rule whose Site matches. Site IDs:
 | Sign-in type | Site ID | Example |
 |--------------|---------|---------|
 | OAuth / OIDC | Host name of the app | `app.dev.example.com` |
-| SAML (e.g. VPN) | Host name of the service provider | `vpn.example.com` |
+| SAML (e.g. VPN) | Host name of the service provider (its response URL, else its entity ID) | `vpn.example.com` |
 | Google services | Host name of the service | `mail.google.com` |
 | CLI apps on `localhost` (e.g. `gcloud`) | OAuth client ID | `32555940559.apps.googleusercontent.com` |
 

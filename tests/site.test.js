@@ -29,13 +29,20 @@ function oauthChooser({ clientId = '123-abc.apps.googleusercontent.com', redirec
   return chooser(params);
 }
 
-function samlChooser(issuer, extra = '') {
-  const xml = '<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" '
-    + 'xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="_1" Version="2.0">'
+function samlChooser(issuer, { extra = '', attrs = '', binding = 'redirect' } = {}) {
+  const xml = '<?xml version="1.0" encoding="UTF-8"?>'
+    + '<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" '
+    + `xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="_1" Version="2.0"${attrs}>`
     + `${extra}<saml:Issuer>${issuer}</saml:Issuer></samlp:AuthnRequest>`;
-  const samlRequest = zlib.deflateRawSync(Buffer.from(xml)).toString('base64');
+  const continueParams = { idpid: 'C0abc' };
+  if (binding === 'post') {
+    continueParams.SAMLRequest = Buffer.from(xml).toString('base64');
+    continueParams.omethod = 'POST';
+  } else {
+    continueParams.SAMLRequest = zlib.deflateRawSync(Buffer.from(xml)).toString('base64');
+  }
   return chooser({
-    continue: url('https://accounts.google.com/o/saml2/continue', { idpid: 'C0abc', SAMLRequest: samlRequest }),
+    continue: url('https://accounts.google.com/o/saml2/continue', continueParams),
     flowName: 'GlifWebSignIn',
   });
 }
@@ -80,13 +87,60 @@ test('SAML: URN Issuer as is', async () => {
   assert.equal(await extractSiteId(samlChooser('urn:amazon:webservices')), 'urn:amazon:webservices');
 });
 
+test('SAML: HTTP-POST binding (not deflated)', async () => {
+  assert.equal(await extractSiteId(samlChooser('https://vpn.example.com/sp', { binding: 'post' })), 'vpn.example.com');
+});
+
+test('SAML: ACS URL host wins over broker Issuer', async () => {
+  const href = samlChooser('https://www.okta.com/saml2/service-provider/spabc', {
+    binding: 'post',
+    attrs: ' AssertionConsumerServiceURL="https://auth.example.com/sso/saml2/0oa123"',
+  });
+  assert.equal(await extractSiteId(href), 'auth.example.com');
+});
+
+for (const binding of ['redirect', 'post']) {
+  test(`SAML (${binding}): ACS URL inside another attribute value is ignored`, async () => {
+    const href = samlChooser('https://vpn.example.com/sp', {
+      binding,
+      attrs: ` ProviderName="Service\nAssertionConsumerServiceURL='https://trusted.example.org/acs'"`
+        + ' x:AssertionConsumerServiceURL="https://trusted.example.org/acs"'
+        + ' AssertionConsumerServiceURL="https://evil.example.net/acs"',
+    });
+    assert.equal(await extractSiteId(href), 'evil.example.net');
+  });
+}
+
+test('SAML: deflated request whose first byte is "<"', async () => {
+  // Run of 10 chars → RLE match length 9 → dynamic block header byte 0x3c
+  const xml = '<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" ID="_aaaaaaaaaa" Version="2.0">'
+    + '<saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">https://vpn.example.com/sp</saml:Issuer>'
+    + '</samlp:AuthnRequest>';
+  const block = zlib.deflateRawSync(Buffer.from(xml), {
+    strategy: zlib.constants.Z_RLE,
+    finishFlush: zlib.constants.Z_SYNC_FLUSH,
+  });
+  // Non-final block + empty final fixed block
+  const compressed = Buffer.concat([block, Buffer.from([0x03, 0x00])]);
+  assert.equal(compressed[0], 0x3c, 'fixture must start with "<"');
+  const href = chooser({
+    continue: url('https://accounts.google.com/o/saml2/continue', { SAMLRequest: compressed.toString('base64') }),
+  });
+  assert.equal(await extractSiteId(href), 'vpn.example.com');
+});
+
+test('SAML: localhost ACS URL falls back to Issuer', async () => {
+  const href = samlChooser('https://vpn.example.com/sp', { attrs: " AssertionConsumerServiceURL='http://localhost:8080/acs'" });
+  assert.equal(await extractSiteId(href), 'vpn.example.com');
+});
+
 test('SAML: Issuer in XML comment is ignored', async () => {
-  const href = samlChooser('https://evil.example.net/sp', '<!-- <saml:Issuer>https://vpn.example.com/sp</saml:Issuer> -->');
+  const href = samlChooser('https://evil.example.net/sp', { extra: '<!-- <saml:Issuer>https://vpn.example.com/sp</saml:Issuer> -->' });
   assert.equal(await extractSiteId(href), 'evil.example.net');
 });
 
 test('SAML: more than one Issuer is ambiguous', async () => {
-  const href = samlChooser('https://evil.example.net/sp', '<saml:Issuer>https://vpn.example.com/sp</saml:Issuer>');
+  const href = samlChooser('https://evil.example.net/sp', { extra: '<saml:Issuer>https://vpn.example.com/sp</saml:Issuer>' });
   assert.equal(await extractSiteId(href), null);
 });
 

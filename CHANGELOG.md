@@ -12,6 +12,13 @@ Types of changes are:
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-19
+
+### Fixes
+
+- No site ID, so no new site prompt, for SAML requests with the HTTP-POST binding (`SAMLRequest` not deflated).
+- SAML through a broker (e.g. Okta): site ID is the host of the response URL (`AssertionConsumerServiceURL`), not the broker's shared `Issuer` (e.g. `www.okta.com`).
+
 ## [2.0.0] - 2026-11-19
 
 ### Breaking changes
@@ -92,7 +99,8 @@ Types of changes are:
 
 - Initial release
 
-[Unreleased]: https://github.com/radeklat/google-account-auto-choose/compare/releases/2.0.0...HEAD
+[Unreleased]: https://github.com/radeklat/google-account-auto-choose/compare/releases/2.0.1...HEAD
+[2.0.1]: https://github.com/radeklat/google-account-auto-choose/compare/releases/2.0.0...releases/2.0.1
 [2.0.0]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.4.0...releases/2.0.0
 [1.4.0]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.3.0...releases/1.4.0
 [1.3.0]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.2.2...releases/1.3.0

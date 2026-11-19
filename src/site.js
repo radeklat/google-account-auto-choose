@@ -25,24 +25,38 @@ globalThis.SiteMatcher = (() => {
     return LOCAL_HOSTS.has(hostname);
   }
 
-  // SAML HTTP-Redirect binding: base64(DEFLATE(XML))
-  async function inflateSamlRequest(value) {
+  // HTTP-Redirect binding: base64(DEFLATE(XML)). HTTP-POST binding (`omethod=POST`): base64(XML).
+  const AUTHN_REQUEST = /<(?:[\w-]+:)?AuthnRequest\b([^>]*)>/g;
+
+  async function decodeSamlRequest(value) {
     // `+` becomes a space if the value was decoded one time too many
     const bytes = Uint8Array.from(atob(value.replace(/ /g, '+')), (c) => c.charCodeAt(0));
+    const plain = new TextDecoder().decode(bytes);
+    // Raw DEFLATE can also start with `<`, so require the element too
+    if (plain.replace(/^\uFEFF/, '').trimStart().startsWith('<') && plain.match(AUTHN_REQUEST)) return plain;
     const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
     return new Response(stream).text();
   }
 
-  async function samlIssuer(continueUrl) {
+  async function samlSiteId(continueUrl) {
     const samlRequest = continueUrl && continueUrl.pathname.includes('/saml2/')
       && continueUrl.searchParams.get('SAMLRequest');
     if (!samlRequest) return null;
     try {
-      // No DOMParser in tests; strip comments so a commented-out Issuer cannot spoof the real one
-      const xml = (await inflateSamlRequest(samlRequest)).replace(/<!--[\s\S]*?-->/g, '');
-      const matches = [...xml.matchAll(/<(?:[\w-]+:)?Issuer\b[^>]*>\s*([^<]+?)\s*<\/(?:[\w-]+:)?Issuer>/g)];
-      if (matches.length !== 1) return null;
-      const issuer = matches[0][1];
+      // No DOMParser in tests; strip comments so a commented-out element cannot spoof the real one
+      const xml = (await decodeSamlRequest(samlRequest)).replace(/<!--[\s\S]*?-->/g, '');
+      const requests = [...xml.matchAll(AUTHN_REQUEST)];
+      const issuers = [...xml.matchAll(/<(?:[\w-]+:)?Issuer\b[^>]*>\s*([^<]+?)\s*<\/(?:[\w-]+:)?Issuer>/g)];
+      if (requests.length !== 1 || issuers.length !== 1) return null;
+
+      // Brokers (e.g. Okta) send a generic Issuer (www.okta.com); ACS URL is on the app's own host
+      // Tokenize in order, so a lookalike inside another attribute's value is skipped
+      const acs = [...requests[0][1].matchAll(/([\w:.-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g)]
+        .find((attr) => attr[1] === 'AssertionConsumerServiceURL');
+      const acsHost = acs && webHostname(acs[2] ?? acs[3]);
+      if (acsHost && !isLocal(acsHost)) return acsHost;
+
+      const issuer = issuers[0][1];
       // Entity ID may be a URN, not a URL
       return webHostname(issuer) || issuer;
     } catch (error) {
@@ -63,8 +77,8 @@ globalThis.SiteMatcher = (() => {
     if (appHost && !isLocal(appHost)) return appHost;
 
     // 2. SAML
-    const issuer = await samlIssuer(continueUrl);
-    if (issuer) return issuer;
+    const samlId = await samlSiteId(continueUrl);
+    if (samlId) return samlId;
 
     // 3. Google's own services, e.g. continue=https://mail.google.com/…
     const continueHost = continueUrl && webHostname(continueUrl.href);
