@@ -263,6 +263,10 @@
       <label for="auto-confirm">Auto-confirm passkey and consent pages</label>
     </div>
     <div class="addon-enabled-row">
+      <input type="checkbox" id="show-notification">
+      <label for="show-notification">Show notification with matched rule</label>
+    </div>
+    <div class="addon-enabled-row">
       <label for="auto-close-delay">Auto-close within (seconds):</label>
       <input type="number" id="auto-close-delay" min="1" max="300" value="10" style="width: 60px;">
     </div>
@@ -286,6 +290,7 @@
         <li><strong>Email:</strong> The email address to automatically select</li>
         <li><strong>Auto-close:</strong> Regex pattern to match URL of a possible confirmation page for auto-closing (optional)</li>
         <li><strong>Auto-close within:</strong> Time window in seconds after account selection when auto-close should occur</li>
+        <li><strong>Show notification:</strong> Show a notification with the matched rule name when an account is auto-selected</li>
         <li><strong>Passkey prompt delay:</strong> Wait in seconds before auto-confirming the passkey page, so password managers (e.g. 1Password) can show their prompt</li>
       </ul>
       

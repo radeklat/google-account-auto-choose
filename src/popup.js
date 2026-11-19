@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const addonEnabledCheckbox = document.getElementById('addon-enabled');
   const autoCloseConfirmationCheckbox = document.getElementById('auto-close-confirmation');
   const autoConfirmCheckbox = document.getElementById('auto-confirm');
+  const showNotificationCheckbox = document.getElementById('show-notification');
   const resetSuccessCountsBtn = document.getElementById('reset-success-counts');
   const emailSuggestionsDatalistId = 'email-suggestions';
   const syncSizeWarning = document.getElementById('sync-size-warning');
@@ -19,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let addonEnabled = true;
   let autoCloseConfirmation = true;
   let autoConfirm = false;
+  let showNotification = false;
   let autoCloseDelay = 10000; // Default 10 seconds
   let passkeyPromptDelay = 5000;
   let autoSaveTimeout = null;
@@ -42,6 +44,10 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   autoConfirmCheckbox.addEventListener('change', () => {
     autoConfirm = autoConfirmCheckbox.checked;
+    autoSave();
+  });
+  showNotificationCheckbox.addEventListener('change', () => {
+    showNotification = showNotificationCheckbox.checked;
     autoSave();
   });
 
@@ -113,6 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
       autoCloseDelay: delayMs,
       autoConfirm: autoConfirmCheckbox ? autoConfirmCheckbox.checked : false,
       passkeyPromptDelay: parseSecondsToMs(passkeyPromptDelayInput.value, 5000),
+      showNotification: showNotificationCheckbox.checked,
       rules
     };
   }
@@ -142,18 +149,20 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function loadConfiguration() {
-    browser.storage.sync.get(['enabled', 'rules', 'autoCloseConfirmation', 'autoCloseDelay', 'autoConfirm', 'passkeyPromptDelay']).then((result) => {
+    browser.storage.sync.get(['enabled', 'rules', 'autoCloseConfirmation', 'autoCloseDelay', 'autoConfirm', 'passkeyPromptDelay', 'showNotification']).then((result) => {
       addonEnabled = result.enabled !== undefined ? result.enabled : true;
       currentRules = result.rules || [];
       autoCloseConfirmation = result.autoCloseConfirmation !== undefined ? result.autoCloseConfirmation : true;
       autoCloseDelay = result.autoCloseDelay !== undefined ? result.autoCloseDelay : 10000;
       autoConfirm = result.autoConfirm === true;
       passkeyPromptDelay = normalizeNonNegativeInt(result.passkeyPromptDelay, 5000);
+      showNotification = result.showNotification === true;
       
       // Update UI
       addonEnabledCheckbox.checked = addonEnabled;
       autoCloseConfirmationCheckbox.checked = autoCloseConfirmation;
       autoConfirmCheckbox.checked = autoConfirm;
+      showNotificationCheckbox.checked = showNotification;
       passkeyPromptDelayInput.value = Math.round(passkeyPromptDelay / 1000);
       updateAutoCloseDelayUI();
       ensureEmailSuggestionsDatalist();
@@ -515,7 +524,8 @@ document.addEventListener('DOMContentLoaded', function() {
       autoCloseConfirmation,
       autoCloseDelay,
       autoConfirm,
-      passkeyPromptDelay
+      passkeyPromptDelay,
+      showNotification
     }).then(() => {
       currentRules = updatedRules;
       updateEmailSuggestionsFromRules(currentRules);
@@ -598,6 +608,7 @@ document.addEventListener('DOMContentLoaded', function() {
       autoCloseDelay: delayMs,
       autoConfirm: normalizeBoolean(parsed.autoConfirm, false),
       passkeyPromptDelay: normalizeNonNegativeInt(parsed.passkeyPromptDelay, 5000),
+      showNotification: normalizeBoolean(parsed.showNotification, false),
       rules: normalizedRules
     };
   }

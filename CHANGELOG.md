@@ -12,6 +12,12 @@ Types of changes are:
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-19
+
+### Features
+
+- Global "Show notification with matched rule" option (off by default): show a desktop notification with the matched rule name when an account is auto-selected. Adds the `notifications` permission.
+
 ## [1.3.0] - 2026-11-06
 
 ### Features
@@ -74,7 +80,8 @@ Types of changes are:
 
 - Initial release
 
-[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.3.0...HEAD
+[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.4.0...HEAD
+[1.4.0]: https://github.com/radeklat/delfino-core/compare/1.3.0...1.4.0
 [1.3.0]: https://github.com/radeklat/delfino-core/compare/1.2.2...1.3.0
 [1.2.2]: https://github.com/radeklat/delfino-core/compare/1.2.1...1.2.2
 [1.2.1]: https://github.com/radeklat/delfino-core/compare/1.2.0...1.2.1

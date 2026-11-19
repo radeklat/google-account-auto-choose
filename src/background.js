@@ -14,6 +14,9 @@ const DEFAULT_CONFIG = {
 
   // Delay before auto-clicking "Continue" on passkey page, lets password managers hook the page
   'passkeyPromptDelay': 5000,
+
+  // Show a notification with the matched rule name when an account is auto-selected
+  'showNotification': false,
   
   // Example configuration structure:
   // "rules": [
@@ -86,6 +89,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
       autoCloseDelay: message.autoCloseDelay !== undefined ? message.autoCloseDelay : 10000,
       autoConfirm: message.autoConfirm === true,
       passkeyPromptDelay: message.passkeyPromptDelay !== undefined ? message.passkeyPromptDelay : 5000,
+      showNotification: message.showNotification === true,
       rules: message.rules 
     }).then(() => {
       sendResponse({ success: true });
@@ -145,6 +149,22 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
   
+  if (message.action === 'notifyRuleMatched') {
+    // Content scripts cannot use the notifications API
+    browser.notifications.create({
+      type: 'basic',
+      iconUrl: browser.runtime.getURL('icons/icon-48.png'),
+      title: 'Google Account Auto-Chooser',
+      message: `Rule "${message.ruleName}" selected ${message.email}`
+    }).then(() => {
+      sendResponse({ success: true });
+    }).catch((error) => {
+      console.error('Error showing notification:', error);
+      sendResponse({ success: false, error: error.message });
+    });
+    return true;
+  }
+
   if (message.action === 'closeTab') {
     // Close the current tab if auto-close is enabled
     browser.storage.sync.get(['autoCloseConfirmation', 'autoCloseDelay', 'rules']).then((result) => {
