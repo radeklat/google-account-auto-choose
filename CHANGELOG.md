@@ -80,14 +80,14 @@ Types of changes are:
 
 - Initial release
 
-[Unreleased]: https://github.com/radeklat/delfino-core/compare/1.4.0...HEAD
-[1.4.0]: https://github.com/radeklat/delfino-core/compare/1.3.0...1.4.0
-[1.3.0]: https://github.com/radeklat/delfino-core/compare/1.2.2...1.3.0
-[1.2.2]: https://github.com/radeklat/delfino-core/compare/1.2.1...1.2.2
-[1.2.1]: https://github.com/radeklat/delfino-core/compare/1.2.0...1.2.1
-[1.2.0]: https://github.com/radeklat/delfino-core/compare/1.1.0...1.2.0
-[1.1.0]: https://github.com/radeklat/delfino-core/compare/1.0.3...1.1.0
-[1.0.3]: https://github.com/radeklat/delfino-core/compare/1.0.2...1.0.3
-[1.0.2]: https://github.com/radeklat/delfino-core/compare/1.0.1...1.0.2
-[1.0.1]: https://github.com/radeklat/delfino-core/compare/1.0.0...1.0.1
-[1.0.0]: https://github.com/radeklat/delfino-core/compare/initial...1.0.0
+[Unreleased]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.4.0...HEAD
+[1.4.0]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.3.0...releases/1.4.0
+[1.3.0]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.2.2...releases/1.3.0
+[1.2.2]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.2.1...releases/1.2.2
+[1.2.1]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.2.0...releases/1.2.1
+[1.2.0]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.1.0...releases/1.2.0
+[1.1.0]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.0.3...releases/1.1.0
+[1.0.3]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.0.2...releases/1.0.3
+[1.0.2]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.0.1...releases/1.0.2
+[1.0.1]: https://github.com/radeklat/google-account-auto-choose/compare/releases/1.0.0...releases/1.0.1
+[1.0.0]: https://github.com/radeklat/google-account-auto-choose/releases/tag/releases/1.0.0
