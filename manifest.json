@@ -1,10 +1,11 @@
 {
   "manifest_version": 2,
   "name": "Google Account Auto-Chooser",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Automatically selects the appropriate Google account based on the continue URL and auto-closes confirmation pages",
   "permissions": [
     "activeTab",
+    "notifications",
     "storage",
     "tabs",
     "*://accounts.google.com/*",

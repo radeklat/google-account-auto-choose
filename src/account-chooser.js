@@ -3,7 +3,7 @@
   'use strict';
 
   // Configuration and state
-  const config = { enabled: true, autoConfirm: false, passkeyPromptDelay: 5000, rules: [] };
+  const config = { enabled: true, autoConfirm: false, passkeyPromptDelay: 5000, showNotification: false, rules: [] };
   let isProcessing = false;
   const successfulRulesThisSession = new Set(); // Track successful rules in current session
   const confirmedUrls = new Set(); // Avoid clicking the same confirmation page twice
@@ -82,12 +82,13 @@
 
   // Load configuration from storage
   function loadConfiguration() {
-    return browser.storage.sync.get(['enabled', 'rules', 'autoConfirm', 'passkeyPromptDelay']).then((result) => {
+    return browser.storage.sync.get(['enabled', 'rules', 'autoConfirm', 'passkeyPromptDelay', 'showNotification']).then((result) => {
       config.enabled = result.enabled !== undefined ? result.enabled : true;
       config.autoConfirm = result.autoConfirm === true;
       config.passkeyPromptDelay = Number.isFinite(result.passkeyPromptDelay) && result.passkeyPromptDelay >= 0
         ? result.passkeyPromptDelay
         : 5000;
+      config.showNotification = result.showNotification === true;
       config.rules = result.rules || [];
       return config;
     });
@@ -279,6 +280,16 @@
             }
           }
           
+          if (config.showNotification) {
+            browser.runtime.sendMessage({
+              action: 'notifyRuleMatched',
+              ruleName: rule.name || rule.email,
+              email: rule.email
+            }).catch((error) => {
+              console.error('Error showing notification:', error);
+            });
+          }
+
           clickableElement.click();
           isProcessing = false;
           return;

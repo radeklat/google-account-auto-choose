@@ -68,6 +68,7 @@ The addon will automatically check for updates every 24 hours. When a new versio
 - Only signed XPI files can be installed in Firefox. Unsigned files will be rejected for security reasons.
 - If you see a warning about "unsigned extensions," make sure you downloaded the signed version from the releases page.
 - The addon requires permissions to access Google account pages and manage tabs for auto-close functionality.
+- The `notifications` permission is used only for the optional matched rule notification.
 
 #### Option 2: Temporary Installation (Development/Testing)
 
@@ -133,6 +134,9 @@ any app that asks for consent for such account.
 passkey page. Password managers (e.g. 1Password) need time to hook the page, otherwise the browser
 native passkey prompt appears instead. Set to `0` to click immediately. Auto-click is skipped if
 you click "Continue" yourself during the delay.
+
+**Show notification with matched rule** (global, off by default): show a desktop notification with
+the name of the matched rule and the selected email when an account is auto-selected.
 
 ### Setting Up Rules
 
